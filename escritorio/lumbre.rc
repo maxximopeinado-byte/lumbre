@@ -1,0 +1,19 @@
+1 ICON "lumbre.ico"
+1 VERSIONINFO
+FILEVERSION 0,2,0,0
+PRODUCTVERSION 0,2,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040A04B0"
+    BEGIN
+      VALUE "FileDescription", "Lumbre, traductor de libros\0"
+      VALUE "ProductName", "Lumbre\0"
+      VALUE "FileVersion", "0.2.0\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x040A, 1200
+  END
+END

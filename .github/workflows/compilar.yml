@@ -1,0 +1,56 @@
+name: Compilar y probar
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - run: pip install -r requirements.txt pytest httpx
+      - run: python -m pytest tests -q
+  compilar:
+    needs: pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - name: Herramientas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends nsis gcc-mingw-w64-x86-64
+          mkdir -p "$RUNNER_TEMP/h/win"
+          python -m venv "$RUNNER_TEMP/h/venv"
+          "$RUNNER_TEMP/h/venv/bin/pip" install -q zstandard
+          curl -fsSL https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xj -C "$RUNNER_TEMP/h/win" bin/micromamba
+          "$RUNNER_TEMP/h/win/bin/micromamba" create -y -q -p "$RUNNER_TEMP/h/win/rt" --platform win-64 -c conda-forge --override-channels --no-rc --no-pyc python=3.13
+      - run: bash escritorio/construir.sh "$RUNNER_TEMP/h" "$PWD/entrega"
+      - uses: actions/upload-artifact@v4
+        with: { name: entrega, path: entrega/ }
+  probar-en-windows:
+    needs: compilar
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: entrega, path: entrega }
+      - name: Instalar y traducir un libro de prueba
+        shell: pwsh
+        run: ./escritorio/prueba-windows.ps1
+  publicar:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: probar-en-windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: entrega, path: entrega }
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" entrega/* --repo "$GITHUB_REPOSITORY" --title "Lumbre ${GITHUB_REF_NAME#v}" --generate-notes

@@ -1,0 +1,5 @@
+LUMBRE · Traductor de libros
+
+Instala con Lumbre-instalador.exe. No necesita Python ni permisos de administrador.
+Windows puede avisar porque el instalador no está firmado: pulsa "Más información" y "Ejecutar de todas formas".
+Los datos se guardan en %LOCALAPPDATA%\Lumbre. Las actualizaciones se instalan desde Ajustes.

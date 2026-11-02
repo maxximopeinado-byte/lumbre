@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4efe8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Lumbre</title>
+<link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="icon" href="/static/icono-192.png">
+<link rel="apple-touch-icon" href="/static/icono-192.png">
+<style>
+/* Una mesa de lectura: papel de lino, tonos topo y marcapáginas en pastel. Barra lateral en escritorio, pestañas abajo en el móvil. */
+@font-face{font-family:"Newsreader";src:url(/static/fuentes/newsreader-latin-400-normal.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Newsreader";src:url(/static/fuentes/newsreader-latin-500-normal.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Newsreader";src:url(/static/fuentes/newsreader-latin-400-italic.woff2) format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Figtree";src:url(/static/fuentes/figtree-latin-400-normal.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Figtree";src:url(/static/fuentes/figtree-latin-500-normal.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Figtree";src:url(/static/fuentes/figtree-latin-600-normal.woff2) format("woff2");font-weight:600;font-display:swap}
+:root{
+  color-scheme:light;
+  --lino:#f4efe8;--papel:#fbf8f3;--avena:#e9e1d7;--topo-claro:#cfc4b8;--topo:#8f8074;--topo-hondo:#5f5248;--cafe:#3b312a;--suave:#6f6358;
+  --salvia:#d7e0d0;--salvia-t:#4c5f49;--rubor:#efd9d4;--rubor-t:#80504a;--cielo:#d6e1e6;--cielo-t:#435c68;--mantequilla:#f2e7c9;--mantequilla-t:#6d5a26;--lavanda:#ded8e6;--lavanda-t:#5a4f6e;
+  --boton-t:#fbf8f3;--sombra:0 1px 2px rgba(95,82,72,.06),0 12px 32px -20px rgba(95,82,72,.3);
+  --display:"Newsreader",Georgia,"Times New Roman",serif;--texto:"Figtree","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  color-scheme:dark;
+  --lino:#272220;--papel:#312b28;--avena:#3c3531;--topo-claro:#574d46;--topo:#a39588;--topo-hondo:#d9cdc1;--cafe:#f1e9e0;--suave:#bdb0a4;
+  --salvia:#3c4739;--salvia-t:#d4e2cd;--rubor:#4d3a37;--rubor-t:#f0d3cd;--cielo:#374449;--cielo-t:#d0e0e7;--mantequilla:#4a412a;--mantequilla-t:#efe0b4;--lavanda:#413b4b;--lavanda-t:#ddd5e8;
+  --boton-t:#272220;--sombra:0 1px 2px rgba(0,0,0,.2),0 14px 34px -20px rgba(0,0,0,.6);
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--lino);color:var(--cafe);font:400 16px/1.55 var(--texto);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+[hidden]{display:none!important}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{touch-action:manipulation}
+:focus-visible{outline:2px solid var(--topo-hondo);outline-offset:2px;border-radius:6px}
+.app{min-height:100%}
+.lateral{max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:24px clamp(16px,4vw,40px) 8px}
+.marca{display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.marca svg{width:30px;height:30px;flex:none}
+.marca b{display:block;font:500 25px/1 var(--display);letter-spacing:-.01em}
+.marca small{display:block;color:var(--suave);font-size:13px;margin-top:3px}
+.acciones{display:flex;align-items:center;gap:10px}
+.version{color:var(--suave);font-size:12.5px}
+.contenido{min-width:0}
+.barra{display:none}
+.vista{width:100%;max-width:1160px;margin:0 auto;padding:26px clamp(16px,4vw,40px) 64px}
+.portada{display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);gap:clamp(24px,4vw,56px);align-items:start}
+.titular{font-size:clamp(34px,4.2vw,50px);letter-spacing:-.018em;max-width:15ch}
+.titular em{color:var(--topo)}
+.entrada{color:var(--suave);max-width:48ch;margin-top:14px;font-size:17px}
+.zona{margin-top:24px;background:var(--papel);border:1.5px dashed var(--topo-claro);border-radius:24px;padding:32px 24px;text-align:center;cursor:pointer;display:block;transition:background .25s,border-color .25s}
+.zona:hover{background:var(--avena);border-color:var(--topo)}
+.zona svg{width:44px;height:44px;margin-bottom:8px}
+.zona strong{display:block;font:400 23px/1.25 var(--display)}
+.zona span{color:var(--suave);font-size:14px}
+.notas{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.seccion-t{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px}
+.seccion-t h2{font-size:26px}.seccion-t span{color:var(--suave);font-size:14px}
+.estante{display:grid;gap:12px}
+.libro{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:16px;align-items:center;background:var(--papel);border-radius:18px;padding:14px 16px 14px 14px;box-shadow:var(--sombra);transition:transform .22s;width:100%;cursor:pointer;border:0;text-align:left}
+.libro:hover{transform:translateY(-2px)}
+.lomo{height:64px;border-radius:5px 9px 9px 5px;position:relative;box-shadow:inset 5px 0 0 rgba(95,82,72,.13)}
+.lomo i{position:absolute;left:12px;right:7px;top:14px;height:2px;background:currentColor;opacity:.4;box-shadow:0 7px 0 currentColor}
+.libro h3{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.libro p{color:var(--suave);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.libro-fin{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.mini-accion{border:0;background:var(--topo-hondo);color:var(--boton-t);border-radius:999px;padding:5px 13px;font-size:13px;font-weight:600;cursor:pointer;min-height:30px}
+.minibarra{height:4px;background:var(--avena);border-radius:9px;overflow:hidden;margin-top:6px}
+.minibarra i{display:block;height:100%;background:var(--topo)}
+.vacio{background:var(--papel);border-radius:22px;padding:28px 26px;box-shadow:var(--sombra)}
+.vacio h3{font-size:22px;margin-bottom:6px}.vacio p{color:var(--suave);font-size:15px}
+.pasos{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:12px}
+.pasos li{display:grid;grid-template-columns:28px 1fr;gap:12px;font-size:15px}
+.pasos b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--avena);font:500 15px var(--display);color:var(--topo-hondo)}
+.volver{background:none;border:0;padding:0;color:var(--suave);cursor:pointer;font-size:14px;margin-bottom:14px;min-height:32px}
+.volver:hover{color:var(--cafe)}
+.visor-barra{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:12px}
+.visor-barra .grupo{display:flex;align-items:center;gap:6px}
+.segmento{display:flex;background:var(--avena);border-radius:999px;padding:3px}
+.segmento button{border:0;background:none;border-radius:999px;padding:7px 13px;min-height:36px;cursor:pointer;font-size:14px;font-weight:500;color:var(--topo-hondo)}
+.segmento button[aria-pressed=true]{background:var(--papel);box-shadow:0 1px 3px rgba(95,82,72,.16)}
+.icono{width:40px;height:40px;border:0;border-radius:50%;background:var(--avena);color:var(--topo-hondo);cursor:pointer;font-size:18px;display:grid;place-items:center}
+.icono:disabled{opacity:.4;cursor:default}
+.visor-barra input[type=number]{width:70px;min-height:40px;background:var(--lino);border:0;border-radius:10px;padding:6px 8px;text-align:center;font-size:15px}
+.visor-paginas{display:grid;gap:12px;justify-content:center;overflow:auto;background:var(--avena);border-radius:18px;padding:14px}
+.visor-paginas.dos{grid-template-columns:repeat(2,minmax(0,var(--ancho,560px)))}
+.visor-paginas.una{grid-template-columns:minmax(0,var(--ancho,700px))}
+.hoja{min-width:0}.hoja img{display:block;width:100%;height:auto;border-radius:3px;background:var(--papel);box-shadow:0 8px 24px -14px rgba(59,49,42,.55)}
+.hoja small{display:block;text-align:center;color:var(--suave);font-size:12.5px;margin-bottom:5px}
+.hoja iframe{display:block;width:100%;height:72vh;border:0;background:#fff;border-radius:3px}
+.resultados{display:grid;gap:6px;margin-bottom:12px;max-height:240px;overflow:auto}
+.resultados button{border:0;text-align:left;background:var(--lino);border-radius:10px;padding:8px 11px;cursor:pointer;font-size:14px}
+.resumen-calidad{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.resumen-calidad button{border:0;cursor:pointer}
+.resumen-calidad button[aria-pressed=true]{outline:2px solid var(--topo-hondo)}
+.vista-t{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+.vista-t h1{font-size:clamp(29px,3.4vw,38px);letter-spacing:-.015em}
+.vista-t p{color:var(--suave);font-size:14.5px;margin-top:3px}
+.ficha{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--avena);color:var(--topo-hondo);white-space:nowrap}
+.salvia{background:var(--salvia);color:var(--salvia-t)}.rubor{background:var(--rubor);color:var(--rubor-t)}.cielo{background:var(--cielo);color:var(--cielo-t)}.mantequilla{background:var(--mantequilla);color:var(--mantequilla-t)}.lavanda{background:var(--lavanda);color:var(--lavanda-t)}
+.recepcion{display:block;background:var(--papel);border:1.5px dashed var(--topo-claro);border-radius:22px;padding:42px 24px;text-align:center;cursor:pointer;transition:background .25s,border-color .25s}
+.recepcion:hover{background:var(--avena);border-color:var(--topo)}
+.recepcion svg{width:46px;height:46px;margin-bottom:8px}
+.recepcion strong{display:block;font:400 26px/1.2 var(--display)}
+.recepcion span{display:block;color:var(--suave);font-size:14.5px;margin-top:4px}
+.soltar{position:fixed;inset:0;z-index:30;background:rgba(59,49,42,.42);display:grid;place-items:center;pointer-events:none}
+.soltar div{background:var(--papel);border-radius:22px;padding:26px 36px;font:400 26px var(--display)}
+.panel{background:var(--papel);border-radius:20px;padding:clamp(18px,3vw,28px);box-shadow:var(--sombra)}
+.panel+.panel{margin-top:14px}
+.panel h2{font-size:23px;margin-bottom:14px}
+.columnas{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);gap:16px;align-items:start}
+.columnas .panel+.panel{margin-top:0}
+.campo{display:grid;gap:6px;margin-bottom:15px}
+.campo label,.etiqueta{font-size:13.5px;font-weight:600;color:var(--topo-hondo)}
+.campo small{color:var(--suave);font-size:13px;line-height:1.45}
+select,input[type=text],input[type=password],textarea{width:100%;min-height:44px;background:var(--lino);border:1px solid transparent;border-radius:12px;padding:10px 13px;font-size:16px;transition:border-color .2s,background .2s}
+select:focus,input:focus,textarea:focus{background:var(--papel);border-color:var(--topo-claro);outline:none}
+textarea{min-height:88px;resize:vertical;line-height:1.45}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.motores{display:grid;gap:8px;margin:8px 0 16px}
+.motor{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:11px;align-items:center;min-height:56px;background:var(--lino);border-radius:14px;padding:9px 13px;cursor:pointer;border:1.5px solid transparent;transition:border-color .2s,background .2s}
+.motor:has(input:checked){border-color:var(--topo);background:var(--papel)}
+.motor input{accent-color:var(--topo-hondo);margin:0;width:18px;height:18px}
+.motor b{font-weight:600;font-size:15px;display:block}.motor small{color:var(--suave);font-size:13px;display:block;line-height:1.3}
+details.plegable{background:var(--lino);border-radius:14px;padding:0 14px;margin-bottom:15px}
+details.plegable summary{min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;font-size:14.5px;font-weight:600;color:var(--topo-hondo);list-style:none}
+details.plegable summary::-webkit-details-marker{display:none}
+details.plegable summary::after{content:"+";font:400 22px var(--display);color:var(--topo)}
+details[open].plegable summary::after{content:"–"}
+details.plegable textarea{background:var(--papel)}
+details.plegable .interior{padding-bottom:14px}
+.casilla{display:flex;gap:11px;align-items:flex-start;min-height:44px;font-size:15px;margin-bottom:16px;cursor:pointer}
+.casilla input{margin-top:4px;width:18px;height:18px;accent-color:var(--topo-hondo);flex:none}
+.casilla small{color:var(--suave);display:block;font-size:13px}
+.boton{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;background:var(--topo-hondo);color:var(--boton-t);border:0;border-radius:999px;padding:10px 22px;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .2s,opacity .2s;font-size:15px}
+.boton:hover{transform:translateY(-1px)}
+.boton:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.boton.suave{background:var(--avena);color:var(--topo-hondo)}
+.boton.linea{background:none;color:var(--topo-hondo);box-shadow:inset 0 0 0 1px var(--topo-claro)}
+.boton.ancho{width:100%;min-height:50px;font-size:16px}
+.accion-fija{position:sticky;bottom:0;margin:0 -2px;padding:10px 0 2px;background:linear-gradient(to top,var(--papel) 75%,transparent)}
+.aviso{border-radius:14px;padding:11px 14px;font-size:14.5px;margin-bottom:13px;line-height:1.48}
+.dato{display:flex;justify-content:space-between;gap:12px;padding-block:9px;border-bottom:1px solid var(--avena);font-size:14.5px}
+.dato:last-child{border:0}.dato span{color:var(--suave)}.dato b{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere;min-width:0}
+.cuota{height:8px;background:var(--avena);border-radius:999px;overflow:hidden;margin-top:10px}
+.cuota i{display:block;height:100%;background:var(--topo);border-radius:999px}
+.terminos{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.terminos button{border:0;cursor:pointer;background:var(--lavanda);color:var(--lavanda-t);border-radius:999px;padding:6px 12px;font-size:13px;min-height:32px}
+.progreso{text-align:center}
+.cifra{font:400 clamp(60px,10vw,92px)/1 var(--display);color:var(--topo-hondo);font-variant-numeric:tabular-nums}
+.barra-p{height:10px;background:var(--avena);border-radius:999px;overflow:hidden;margin:18px auto;max-width:560px}
+.barra-p i{display:block;height:100%;background:var(--topo);border-radius:999px;transition:width .6s ease}
+.fases{list-style:none;margin:20px auto;padding:0;max-width:420px;text-align:left;display:grid;gap:2px}
+.fases li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:center;min-height:40px;color:var(--suave);font-size:15px}
+.fases i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--avena);font:normal 600 13px var(--texto)}
+.fases .hecha i{background:var(--salvia);color:var(--salvia-t)}
+.fases .activa{color:var(--cafe);font-weight:600}
+.fases .activa i{background:var(--mantequilla);color:var(--mantequilla-t)}
+.fases .activa i::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;animation:latir 1.4s ease-in-out infinite}
+@keyframes latir{50%{opacity:.25}}
+.pestanas-libro{display:flex;gap:4px;overflow-x:auto;background:var(--avena);border-radius:999px;padding:4px;width:fit-content;max-width:100%;margin-bottom:16px;scrollbar-width:none}
+.pestanas-libro button{border:0;background:none;padding:8px 17px;min-height:38px;border-radius:999px;cursor:pointer;font-weight:500;font-size:14.5px;color:var(--topo-hondo);white-space:nowrap}
+.pestanas-libro button[aria-selected=true]{background:var(--papel);box-shadow:0 1px 3px rgba(95,82,72,.16)}
+.descargas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px}
+.descarga{display:grid;grid-template-columns:38px 1fr;gap:12px;align-items:center;text-decoration:none;border-radius:16px;padding:14px;min-height:70px;transition:transform .2s}
+.descarga:hover{transform:translateY(-2px)}
+.descarga b{display:block;font-size:15px}.descarga small{font-size:13px;opacity:.86}
+.descarga svg{width:34px;height:34px}
+.fila{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.lista-ideas{counter-reset:idea;list-style:none;padding:0;margin:0;display:grid;gap:15px;max-width:68ch}
+.lista-ideas li{counter-increment:idea;display:grid;grid-template-columns:30px 1fr;gap:10px;font:400 18.5px/1.42 var(--display)}
+.lista-ideas li::before{content:counter(idea);color:var(--topo);font-style:italic;font-size:21px}
+.lista-ideas small{display:block;font:400 13px var(--texto);color:var(--suave);margin-top:3px}
+.markdown{max-width:68ch;font:400 18px/1.52 var(--display)}.markdown h3{margin:16px 0 8px;font-size:22px}.markdown ul,.markdown ol{padding-left:22px}.markdown li{margin-bottom:7px}.markdown p{margin-bottom:12px}
+.revision{display:grid;gap:9px}
+.revision article{background:var(--lino);border-radius:14px;padding:13px 15px}
+.revision header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:5px;font-size:13.5px;color:var(--suave)}
+.revision p{font-size:14.5px;margin-top:4px;overflow-wrap:anywhere}.revision p b{font-weight:600}
+.pregunta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:15px}
+.pasaje{border-left:3px solid var(--topo-claro);padding:3px 0 3px 13px;margin:0 0 14px;max-width:68ch;font:400 17px/1.48 var(--display)}
+.pasaje small{display:block;font:400 13px var(--texto);color:var(--suave);margin-top:3px}
+.ajuste h3{font:600 15.5px var(--texto);margin-bottom:3px}.ajuste p{font-size:14px;color:var(--suave);margin-bottom:10px}
+.ajuste{padding-block:15px;border-bottom:1px solid var(--avena)}.ajuste:first-of-type{padding-top:0}.ajuste:last-of-type{border:0;padding-bottom:0}
+.ajuste .fila-clave{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.ajuste a{color:var(--topo-hondo)}
+.resultado{font-size:13.5px;margin-top:7px;overflow-wrap:anywhere}
+.vacio-t{font-size:15px;color:var(--suave)}
+.tostada{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--cafe);color:var(--lino);padding:10px 18px;border-radius:999px;font-size:14.5px;max-width:calc(100vw - 32px)}
+.pestanas{display:none}
+@media (max-width:760px){
+  .lateral{display:none}
+  .volver{display:none}
+  .portada{grid-template-columns:minmax(0,1fr)}
+  .titular{max-width:none;font-size:32px}
+  .entrada{font-size:16px}
+  .libro{grid-template-columns:40px minmax(0,1fr) auto;padding:12px}
+  .lomo{height:54px}
+  .visor-paginas{padding:8px;border-radius:12px}
+  .visor-paginas.dos{grid-template-columns:minmax(0,1fr)}
+  .barra{display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:20;min-height:calc(54px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) max(10px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px));background:var(--lino)}
+  .barra button{width:44px;height:44px;border:0;background:none;display:grid;place-items:center;cursor:pointer;color:var(--topo-hondo);flex:none}
+  .barra button svg{width:24px;height:24px}
+  .barra b{font:500 21px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:6px}
+  .vista{padding:8px max(16px,env(safe-area-inset-right,0px)) calc(92px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .vista-t{margin-bottom:14px}
+  .vista-t.detalle h1{display:none}
+  .columnas{grid-template-columns:minmax(0,1fr)}
+  .columnas .panel+.panel{margin-top:0}
+  .pestanas{display:grid;grid-template-columns:1fr 1fr 1fr;position:fixed;left:0;right:0;bottom:0;z-index:25;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:var(--papel);box-shadow:0 -6px 24px -14px rgba(95,82,72,.45)}
+  .pestana{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;border:0;background:none;border-radius:12px;cursor:pointer;color:var(--suave);font-size:12px;font-weight:500}
+  .pestana[aria-current=page]{color:var(--cafe);background:var(--avena)}
+  .sin-pestanas .pestanas{display:none}
+  .sin-pestanas .vista{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+  .pregunta{grid-template-columns:minmax(0,1fr)}
+  .accion-fija{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px))}
+  .panel{border-radius:18px}
+  .tostada{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-width:360px){.dos{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="lateral">
+    <button class="marca" data-ir="biblioteca" aria-label="Volver al inicio"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3c1.500 4.500 7 7.300 7 13.600A7 7 0 0 1 16 24a7 7 0 0 1-7-7.400c0-3.600 2.300-5 3.700-7.700.7 1.800 1.600 2.600 2.600 3.100C15 9.500 15 6.500 16 3Z" fill="var(--rubor)" stroke="var(--topo-hondo)" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 27.500h20" stroke="var(--topo-hondo)" stroke-width="1.8" stroke-linecap="round"/></svg><span><b>Lumbre</b><small>Traductor de libros</small></span></button>
+    <div class="acciones"><span class="version" id="version"></span><button class="boton suave" data-ir="ajustes">Ajustes</button></div>
+  </header>
+  <div class="contenido">
+    <header class="barra"><button id="barra-volver" aria-label="Volver" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><b id="barra-titulo">Lumbre</b></header>
+    <main class="vista" id="vista"></main>
+  </div>
+  <nav class="pestanas" aria-label="Secciones">
+    <button class="pestana" data-ir="biblioteca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 4v16M9.500 4v16M14 5l4.500 15"/></svg>Biblioteca</button>
+    <button class="pestana" data-anadir><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Añadir</button>
+    <button class="pestana" data-ir="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Ajustes</button>
+  </nav>
+</div>
+<div class="soltar" id="soltar" hidden><div>Suelta aquí tu libro</div></div>
+<div class="tostada" id="tostada" role="status" hidden></div>
+<input type="file" id="selector" accept=".epub,.pdf,application/epub+zip,application/pdf" hidden>
+<input type="file" id="selector-act" accept=".zip" hidden>
+<script>
+const PASTELES=[["--salvia","--salvia-t"],["--rubor","--rubor-t"],["--cielo","--cielo-t"],["--mantequilla","--mantequilla-t"],["--lavanda","--lavanda-t"]];
+const $v=document.getElementById("vista");
+const S={ajustes:null,motores:[],idiomas:{},actual:null,pestana:"descargas",temp:null,version:"",opciones:{}};
+const num=n=>new Intl.NumberFormat("es-ES",{useGrouping:true}).format(Math.round(n||0));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const color=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))>>>0;return PASTELES[h%PASTELES.length]};
+const ACTIVOS=["traduciendo","en cola"];
+const ETIQUETA={listo:["Por traducir","cielo"],"en cola":["En cola","mantequilla"],traduciendo:["En curso","mantequilla"],terminado:["Traducido","salvia"],pausado:["En pausa","rubor"],detenido:["Detenido","rubor"],error:["Con error","rubor"]};
+const ficha=e=>{const[t,c]=ETIQUETA[e]||[e,""];return`<span class="ficha ${c}">${esc(t)}</span>`};
+async function api(ruta,op={}){const r=await fetch(ruta,op);let d=null;try{d=await r.json()}catch{}if(!r.ok)throw new Error(d?.detail||"No se ha podido completar la operación.");return d}
+const post=(ruta,c)=>api(ruta,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(c)});
+function tostada(t){const e=document.getElementById("tostada");e.textContent=t;e.hidden=false;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=true,3600)}
+function marcar(seccion,conPestanas=true,titulo="Lumbre",volver=false){
+  document.querySelectorAll("[data-ir]").forEach(b=>{if(b.dataset.ir===seccion)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  document.getElementById("app").classList.toggle("sin-pestanas",!conPestanas);
+  document.getElementById("barra-titulo").textContent=titulo;
+  document.getElementById("barra-volver").hidden=!volver;
+  window.scrollTo(0,0);
+}
+async function cargarAjustes(){const d=await api("/api/ajustes");S.ajustes=d.ajustes;S.motores=d.motores;S.idiomas=d.idiomas}
+const parar=()=>{clearTimeout(S.temp);S.temp=null};
+
+async function biblioteca(){
+  parar();S.actual=null;marcar("biblioteca",true,"Lumbre");
+  const est=await api("/api/estado").catch(()=>({}));
+  S.version=est.version||S.version;document.getElementById("version").textContent=S.version?`Versión ${S.version}`:"";
+  if(est.recuperando){$v.innerHTML=`<div class="aviso cielo">Buscando tus libros y ajustes de la versión anterior…</div>`;S.temp=setTimeout(biblioteca,1000);return}
+  let libros=[];try{libros=await api("/api/libros")}catch{}
+  const vis=l=>`<span class="ficha salvia">${l}</span>`;
+  $v.innerHTML=`<div id="aviso-act"></div><div class="portada"><section>
+    <h1 class="titular">Tus libros, en tu idioma y <em>con su forma de siempre</em></h1>
+    <p class="entrada">Carga un EPUB o un PDF. Lumbre lo traduce conservando capítulos, estilos, notas e imágenes, y te dice qué merece una segunda lectura.</p>
+    <label class="zona" for="selector" tabindex="0"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M8 12c6-3 11-2 16 2v26c-5-4-10-5-16-2V12Z" fill="var(--avena)" stroke="var(--topo-hondo)" stroke-width="1.6" stroke-linejoin="round"/><path d="M40 12c-6-3-11-2-16 2v26c5-4 10-5 16-2V12Z" fill="var(--salvia)" stroke="var(--topo-hondo)" stroke-width="1.6" stroke-linejoin="round"/></svg><strong>Suelta aquí tu libro</strong><span>o pulsa para elegirlo · EPUB o PDF</span></label>
+    <div class="notas"><span class="ficha salvia">Visor comparado</span><span class="ficha cielo">Edición bilingüe</span><span class="ficha mantequilla">Resumen por ideas</span><span class="ficha lavanda">Preguntas al libro</span><span class="ficha rubor">Informe de calidad</span></div>
+    <div id="error-carga" style="margin-top:14px"></div>
+  </section><section>
+    <div class="seccion-t"><h2>Tu biblioteca</h2><span>${libros.length?`${libros.length} ${libros.length===1?"libro":"libros"}`:""}</span></div>
+    ${est.recuperados?`<div class="aviso salvia">Se han recuperado ${est.recuperados} libros de la versión anterior.</div>`:""}
+    ${libros.length?`<div class="estante">${libros.map(tarjeta).join("")}</div>`:`<div class="vacio"><h3>Aún no hay libros en el estante</h3><p>Así será el primero:</p><ol class="pasos"><li><b>1</b><span>Carga el libro y revisa cuánta cuota necesita.</span></li><li><b>2</b><span>Elige el motor y añade los términos que no deben variar.</span></li><li><b>3</b><span>Léelo en el visor y revisa el informe de calidad.</span></li></ol></div>`}
+  </section></div>`;
+  document.querySelectorAll("[data-libro]").forEach(b=>b.onclick=e=>{if(e.target.closest("[data-reanudar]"))return;abrir(b.dataset.libro)});
+  document.querySelectorAll("[data-reanudar]").forEach(b=>b.onclick=async e=>{e.stopPropagation();const id=b.dataset.reanudar;try{const l=await api(`/api/libros/${id}`);await post(`/api/libros/${id}/traducir`,{...(l.opciones||{}),reanudar:true});abrir(id)}catch(err){tostada(err.message);abrir(id)}});
+  comprobarActualizacion();
+  if(libros.some(l=>ACTIVOS.includes(l.estado)))S.temp=setTimeout(biblioteca,4000);
+}
+function tarjeta(l){
+  const[f,t]=color(l.id);const activo=ACTIVOS.includes(l.estado),puede=["pausado","detenido","error"].includes(l.estado)&&l.opciones?.motor;
+  const det=[l.autor,`${num(l.unidades)} ${l.unidad}`,(l.tipo||"").toUpperCase()].filter(Boolean).join(" · ");
+  return`<div class="libro" role="button" tabindex="0" data-libro="${l.id}"><span class="lomo" style="background:var(${f});color:var(${t})"><i></i></span><span style="min-width:0"><h3>${esc(l.titulo||l.archivo)}</h3><p>${esc(det)}</p>${activo?`<div class="minibarra"><i style="width:${l.progreso||0}%"></i></div>`:""}</span><span class="libro-fin">${ficha(l.estado)}${puede?`<button class="mini-accion" data-reanudar="${l.id}">Reanudar</button>`:""}</span></div>`;
+}
+let avisoAct=null;
+async function comprobarActualizacion(){
+  try{if(!avisoAct)avisoAct=await api("/api/actualizaciones")}catch{return}
+  const c=document.getElementById("aviso-act");if(!c||!avisoAct.disponible)return;
+  c.innerHTML=`<div class="aviso cielo fila" style="justify-content:space-between"><span>Hay una versión nueva: <b>${esc(avisoAct.version)}</b></span><button class="boton suave" id="act-remota">Actualizar ahora</button></div>`;
+  document.getElementById("act-remota").onclick=()=>instalarRemota(c);
+}
+async function instalarRemota(c){c.innerHTML=`<div class="aviso cielo">Descargando e instalando…</div>`;try{const r=await post("/api/actualizaciones/instalar",{});esperarReinicio(r,c)}catch(e){c.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}}
+function esperarReinicio(r,s){
+  if(!r.reinicia){s.innerHTML=`<div class="aviso salvia">Versión ${esc(r.version)} instalada. Cierra y abre la app para usarla.</div>`;return}
+  s.innerHTML=`<div class="aviso cielo">Reiniciando con la versión ${esc(r.version)}…</div>`;
+  const espera=async n=>{try{const x=await api("/api/estado");if(x.version===r.version){location.reload();return}}catch{}if(n>0)setTimeout(()=>espera(n-1),1000);else s.innerHTML=`<div class="aviso mantequilla">Cierra y vuelve a abrir la app para terminar.</div>`};
+  setTimeout(()=>espera(30),1500);
+}
+async function subir(a){
+  if(!a)return;tostada(`Leyendo ${a.name}…`);
+  const d=new FormData();d.append("file",a);
+  try{const l=await api("/api/libros",{method:"POST",body:d});document.getElementById("tostada").hidden=true;abrir(l.id)}
+  catch(e){document.getElementById("tostada").hidden=true;if(!document.getElementById("error-carga"))await biblioteca();document.getElementById("error-carga").innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}
+}
+document.getElementById("selector").onchange=e=>{subir(e.target.files[0]);e.target.value=""};
+document.querySelectorAll("[data-anadir]").forEach(b=>b.onclick=()=>document.getElementById("selector").click());
+document.querySelectorAll("[data-ir]").forEach(b=>b.onclick=()=>b.dataset.ir==="ajustes"?ajustes():biblioteca());
+document.getElementById("barra-volver").onclick=biblioteca;
+let arrastres=0;const soltar=document.getElementById("soltar");
+addEventListener("dragenter",e=>{e.preventDefault();arrastres++;soltar.hidden=false});
+addEventListener("dragover",e=>e.preventDefault());
+addEventListener("dragleave",()=>{if(--arrastres<=0){arrastres=0;soltar.hidden=true}});
+addEventListener("drop",e=>{e.preventDefault();arrastres=0;soltar.hidden=true;subir(e.dataTransfer.files[0])});
+
+async function abrir(id){parar();S.actual=id;S.pestana="leer";await cargarAjustes();await pintar()}
+async function pintar(forzar){
+  parar();
+  const l=await api(`/api/libros/${S.actual}`);
+  marcar("biblioteca",false,l.titulo||l.archivo,true);
+  const det=[l.autor,`${num(l.unidades)} ${l.unidad}`].filter(Boolean).join(" · ");
+  const cab=`<button class="volver" id="volver">← Biblioteca</button><div class="vista-t detalle"><div style="min-width:0"><h1 style="overflow-wrap:anywhere">${esc(l.titulo||l.archivo)}</h1><p>${esc(det)}</p></div>${ficha(forzar?"listo":l.estado)}</div>`;
+  const volver=()=>{const b=document.getElementById("volver");if(b)b.onclick=biblioteca};
+  if(!forzar&&ACTIVOS.includes(l.estado)){$v.innerHTML=cab+vProgreso(l);volver();enlazar(l);S.temp=setTimeout(pintarProgreso,1000);return}
+  $v.innerHTML=cab+(!forzar&&l.estado==="terminado"?await vResultado(l):vPreparar(forzar?{...l,estado:"listo",mensaje:""}:l));
+  volver();enlazar(l);if(document.getElementById("visor"))iniciarVisor(l);
+}
+function vPreparar(l){
+  const o=l.opciones||S.opciones[l.id]||{};
+  const elegido=o.motor||(S.motores.find(m=>m.listo&&!["prueba","libre"].includes(m.id))?.id)||"prueba";
+  const op=(sel,auto)=>Object.entries(S.idiomas).filter(([k])=>auto||k!=="auto").map(([k,v])=>`<option value="${k}" ${k===sel?"selected":""}>${esc(v)}</option>`).join("");
+  return`<div class="columnas"><section class="panel">
+  ${l.mensaje?`<div class="aviso ${l.estado==="error"?"rubor":"mantequilla"}">${esc(l.mensaje)}</div>`:""}
+  ${(l.avisos||[]).map(a=>`<div class="aviso mantequilla">${esc(a)}</div>`).join("")}
+  <div class="dos"><div class="campo"><label for="origen">Idioma del libro</label><select id="origen">${op(o.origen||(S.idiomas[l.idioma]?l.idioma:"auto"),true)}</select></div><div class="campo"><label for="destino">Traducir a</label><select id="destino">${op(o.destino||"es",false)}</select></div></div>
+  <div class="etiqueta">Motor de traducción</div>
+  <div class="motores">${S.motores.map(m=>`<label class="motor"><input type="radio" name="motor" value="${m.id}" ${m.id===elegido?"checked":""}><span><b>${esc(m.label)}</b><small>${esc(m.note)}</small></span>${m.listo?"":`<span class="ficha rubor">Falta clave</span>`}</label>`).join("")}</div>
+  <details class="plegable" ${o.glosario?"open":""}><summary>Glosario${l.terminos?.length?` · ${l.terminos.length} sugerencias`:""}</summary><div class="interior"><label class="etiqueta" for="glosario" hidden>Glosario</label><textarea id="glosario" placeholder="Una entrada por línea:&#10;germ theory = teoría microbiana">${esc(o.glosario||"")}</textarea>${l.terminos?.length?`<div class="terminos">${l.terminos.map(t=>`<button type="button" data-termino="${esc(t.termino)}">${esc(t.termino)} · ${t.veces}</button>`).join("")}</div>`:""}</div></details>
+  <label class="casilla"><input type="checkbox" id="bilingue" ${o.bilingue?"checked":""}><span>Crear también una edición bilingüe<small>${l.tipo==="epub"?"Original y traducción, párrafo a párrafo.":"Página original y traducida, alternadas."}</small></span></label>
+  <div id="error-inicio"></div>
+  <div class="accion-fija"><button class="boton ancho" id="traducir" ${l.bloqueado?"disabled":""}>${["pausado","detenido","error"].includes(l.estado)?"Reanudar la traducción":"Traducir el libro"}</button></div>
+  </section><aside class="panel"><h2>Este libro</h2><button class="boton suave" id="ver-original" style="width:100%;margin-bottom:10px">Leer el original</button><div class="dato"><span>Formato</span><b>${esc(l.tipo.toUpperCase())}</b></div><div class="dato"><span>Texto</span><b>${num(l.caracteres)} caracteres</b></div><div id="estimacion" style="margin-top:12px"></div><button class="boton linea" id="borrar" style="margin-top:12px;width:100%">Quitar de la biblioteca</button></aside></div>`;
+}
+function estimar(l){
+  const m=S.motores.find(x=>x.id===document.querySelector("[name=motor]:checked")?.value),c=document.getElementById("estimacion");if(!m||!c)return;
+  if(m.id==="prueba"){c.innerHTML=`<div class="aviso cielo">No traduce: altera las palabras para comprobar que la maqueta aguanta. No gasta nada.</div>`;return}
+  if(m.id==="libre"){c.innerHTML=`<div class="aviso cielo">Funciona en vuestro equipo, sin cuota. Debe estar en marcha antes de empezar.</div>`;return}
+  if(!m.quota){c.innerHTML=`<div class="aviso cielo">Se paga por uso con una clave de su API, aparte de cualquier suscripción.</div>`;return}
+  const total=l.caracteres*1.03,libre=Math.max(0,m.quota-m.usado_mes),pct=Math.min(100,(m.usado_mes+total)/m.quota*100),cabe=total<=libre;
+  if(m.id==="deepl"&&m.listo)api("/api/motores/deepl/cuota").then(q=>{const x=document.getElementById("cuota-real");if(x&&q.restante!=null)x.innerHTML=`<div class="dato"><span>Quedan en tu cuenta de DeepL</span><b>${num(q.restante)}</b></div>${q.restante<total?`<div class="aviso rubor" style="margin-top:8px">No alcanza para todo el libro. Se pausará al agotarse y podrás reanudar.</div>`:""}`}).catch(()=>{});
+  c.innerHTML=`<div id="cuota-real"></div><div class="dato"><span>Necesitará, aprox.</span><b>${num(total)}</b></div><div class="dato"><span>Cuota gratis al mes</span><b>${num(m.quota)}</b></div><div class="dato"><span>Usado aquí este mes</span><b>${num(m.usado_mes)}</b></div><div class="cuota"><i style="width:${pct}%"></i></div><div class="aviso ${cabe?"salvia":"mantequilla"}" style="margin-top:10px">${cabe?"Cabe en la cuota restante.":"Puede no caber en la cuota de este mes. Se pausará al agotarse y lo traducido se conserva."}</div>${m.id==="deepl"?`<div class="aviso mantequilla">DeepL promete borrado inmediato en planes de pago; su página no lo afirma para el gratuito.</div>`:""}`;
+}
+const FASES=[["preparando","Analizar páginas e ilustraciones"],["traduciendo","Traducir el texto"],["maquetando","Colocar el texto en cada página"],["guardando","Guardar el libro"],["revisando","Comprobar la calidad"]];
+function detalleFase(l){
+  if(l.fase==="preparando")return l.pasos?`Página ${num(l.paso)} de ${num(l.pasos)}`:"Preparando…";
+  if(l.fase==="maquetando")return l.pasos?`Página ${num(l.paso)} de ${num(l.pasos)}`:"";
+  if(l.fase==="guardando")return"Puede tardar unos minutos si el libro pesa mucho";
+  if(l.fase==="revisando")return l.pasos>1?`Comprobando la página ${num(l.paso)} de ${num(l.pasos)}`:"Ya casi está";
+  return l.total?`${num(l.hechos)} de ${num(l.total)} caracteres`:"Preparando…";
+}
+function listaFases(l){
+  const fases=l.tipo==="epub"?FASES.filter(f=>!["maquetando","preparando"].includes(f[0])):l.escaneado?FASES:FASES.filter(f=>f[0]!=="preparando");const i=Math.max(0,fases.findIndex(f=>f[0]===(l.fase||"traduciendo")));
+  return fases.map((f,n)=>`<li class="${n<i?"hecha":n===i?"activa":""}"><i>${n<i?"✓":n===i?"":n+1}</i><span>${esc(f[1])}</span></li>`).join("");
+}
+function vProgreso(l){
+  return`<section class="panel progreso"><div class="cifra" id="cifra">${Math.floor(l.progreso||0)} %</div><div class="barra-p"><i id="bp" style="width:${l.progreso||0}%"></i></div><p id="dp" style="color:var(--suave)">${esc(detalleFase(l))}</p><ol class="fases" id="fases">${listaFases(l)}</ol><p style="color:var(--suave);font-size:14.5px;max-width:46ch;margin:0 auto 16px">Puedes cerrar la ventana: Lumbre seguirá trabajando y lo verás aquí al volver a abrirla.</p><button class="boton linea" id="detener">Detener</button></section>`;
+}
+async function pintarProgreso(){
+  try{const l=await api(`/api/libros/${S.actual}`);
+    if(!ACTIVOS.includes(l.estado)){await pintar();return}
+    const c=document.getElementById("cifra");if(!c)return;
+    c.textContent=`${Math.floor(l.progreso||0)} %`;document.getElementById("bp").style.width=`${l.progreso||0}%`;document.getElementById("dp").textContent=detalleFase(l);document.getElementById("fases").innerHTML=listaFases(l);
+  }catch{}
+  S.temp=setTimeout(pintarProgreso,1000);
+}
+const claudeListo=()=>S.motores.find(m=>m.id==="claude")?.listo;
+async function vResultado(l){
+  const inf=await api(`/api/libros/${l.id}/informe`);
+  const q=l.calidad||{alta:0,media:0,baja:0};const pest=[["leer","Leer"],["descargas","Descargas"],["resumen","Resumen"],["preguntas","Preguntas"],["revision",`Calidad${q.alta+q.media?` · ${q.alta+q.media}`:""}`]];
+  const motor=S.motores.find(m=>m.id===l.motor)?.label||l.motor;
+  const flecha=`<svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><path d="M9 6h16a3 3 0 0 1 3 3v21H12a3 3 0 0 1-3-3V6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 27a3 3 0 0 1 3-3h16M18 12v7m0 0-3-3m3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const c={
+  leer:`<div id="visor"></div>`,
+  descargas:`${l.motor==="prueba"?`<div class="aviso mantequilla">Prueba de maquetación: el texto no está traducido de verdad.</div>`:""}${(l.avisos||[]).map(a=>`<div class="aviso mantequilla">${esc(a)}</div>`).join("")}<div class="descargas"><a class="descarga salvia" href="/api/libros/${l.id}/descargar/traducido">${flecha}<span><b>Libro traducido</b><small>${esc(l.tipo.toUpperCase())} con el formato original</small></span></a>${l.salidas.bilingue?`<a class="descarga cielo" href="/api/libros/${l.id}/descargar/bilingue">${flecha}<span><b>Edición bilingüe</b><small>Original y traducción</small></span></a>`:""}</div><div class="dato"><span>Motor</span><b>${esc(motor)}</b></div><div class="dato"><span>Enviados al motor</span><b>${num(l.enviados)} caracteres</b></div><div class="dato"><span>Reutilizados sin gastar cuota</span><b>${num(l.reutilizados)} caracteres</b></div><div class="dato"><span>Avisos de calidad</span><b>${num(l.avisos_calidad)}</b></div><div class="fila" style="margin-top:14px"><button class="boton linea" id="repetir">Traducir de nuevo</button><button class="boton linea" id="borrar">Quitar de la biblioteca</button></div>`,
+  resumen:`<div class="campo" style="max-width:260px"><label for="nivel">Extensión</label><select id="nivel"><option value="breve">Breve · 5 ideas</option><option value="media" selected>Media · 10 ideas</option><option value="extensa">Extensa · 15 ideas</option></select></div><div class="fila" style="margin-bottom:14px"><button class="boton" id="res-claude" ${claudeListo()?"":"disabled"}>Resumir con Claude</button><button class="boton suave" id="res-frases">Frases clave, gratis</button></div>${claudeListo()?"":`<p class="vacio-t" style="margin-bottom:14px">El resumen redactado necesita una clave de la API de Claude en Ajustes. Las frases clave citan literalmente el libro.</p>`}<div id="sal-res"></div>`,
+  preguntas:`<form class="pregunta" id="f-preg"><input type="text" id="pregunta" placeholder="¿Qué argumenta sobre…?" aria-label="Tu pregunta"><button class="boton">Buscar</button></form><div id="sal-preg"><p class="vacio-t">Encontrará los pasajes más relacionados.${claudeListo()?" Claude redactará una respuesta con referencias.":" Con una clave de Claude, también redactará una respuesta."}</p></div>`,
+  revision:vCalidad(l,inf)
+  }[S.pestana];
+  return`<div class="pestanas-libro" role="tablist">${pest.map(([k,t])=>`<button role="tab" data-p="${k}" aria-selected="${k===S.pestana}">${esc(t)}</button>`).join("")}</div><section class="panel">${c}</section>`;
+}
+const GRAV={alta:["Revisar seguro","rubor"],media:["Conviene mirar","mantequilla"],baja:["Menor","cielo"]};
+function vCalidad(l,inf){
+  S.filtroC=S.filtroC||"todos";
+  if(!inf.length)return`<div class="aviso salvia" style="margin:0">Las comprobaciones de texto y maquetación no han encontrado nada. Conviene leer un capítulo de muestra: no valoran el estilo.</div>`;
+  const q={alta:0,media:0,baja:0};inf.forEach(i=>q[i.gravedad||"media"]++);
+  const vis=inf.filter(i=>S.filtroC==="todos"||(i.gravedad||"media")===S.filtroC);
+  const pag=i=>{const m=/página (\d+)/.exec(i.lugar);return m?m[1]:""};
+  return`${q.alta?`<div class="aviso rubor">${q.alta} avisos importantes. Empieza por estos.</div>`:`<div class="aviso salvia">Sin avisos importantes. Quedan ${q.media+q.baja} detalles por mirar si quieres.</div>`}
+  <div class="resumen-calidad">${[["todos",`Todos · ${inf.length}`,""],["alta",`${GRAV.alta[0]} · ${q.alta}`,"rubor"],["media",`${GRAV.media[0]} · ${q.media}`,"mantequilla"],["baja",`${GRAV.baja[0]} · ${q.baja}`,"cielo"]].map(([k,t,c])=>`<button class="ficha ${c}" data-filtro="${k}" aria-pressed="${S.filtroC===k}">${esc(t)}</button>`).join("")}<a class="boton suave" href="/api/libros/${l.id}/informe.csv" style="margin-left:auto">Descargar informe</a></div>
+  <div class="revision">${vis.slice(0,200).map(i=>`<article><header><span class="ficha ${GRAV[i.gravedad||"media"][1]}">${esc(i.tipo)}</span><span>${esc(i.lugar)}</span>${pag(i)&&l.tipo==="pdf"?`<button class="boton linea" style="min-height:32px;padding:3px 12px;margin-left:auto;font-size:13px" data-ver="${pag(i)}">Ver página</button>`:""}</header><p><b>${esc(i.mensaje)}</b></p>${i.original?`<p>${esc(i.original)}</p>`:""}<p style="color:var(--suave)">${esc(i.traduccion)}</p></article>`).join("")}</div>${vis.length>200?`<p class="vacio-t" style="margin-top:10px">Se muestran 200 de ${num(vis.length)}. El informe los incluye todos.</p>`:""}`;
+}
+async function iniciarVisor(l,paginaInicial){
+  const c=document.getElementById("visor");if(!c)return;c.innerHTML=`<p class="vacio-t">Abriendo…</p>`;
+  let info;try{info=await api(`/api/libros/${l.id}/visor`)}catch(e){c.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`;return}
+  const docs=info.documentos,hay=d=>!!docs[d];
+  const V={doc:hay("traducido")?(innerWidth<760?"traducido":"comparar"):"original",n:paginaInicial||S.visorPagina?.[l.id]||1,ancho:Math.min(1200,Math.max(600,innerWidth>900?900:700)),esc:1};
+  const total=()=>(docs.traducido||docs.original).paginas;
+  const hoja=(d,titulo)=>{
+    if(info.tipo==="pdf")return`<div class="hoja">${titulo?`<small>${esc(titulo)}</small>`:""}<img alt="${esc(titulo||"Página")} ${V.n}" src="/api/libros/${l.id}/pagina/${d}/${V.n}.jpg?ancho=${V.ancho}"></div>`;
+    const ruta=(docs[d].secciones[V.n-1]||"").split("/").map(encodeURIComponent).join("/");
+    return`<div class="hoja">${titulo?`<small>${esc(titulo)}</small>`:""}<iframe title="${esc(titulo||"Libro")}" sandbox="allow-same-origin" src="/api/libros/${l.id}/epub/${d}/${ruta}"></iframe></div>`;
+  };
+  const pintarV=()=>{
+    S.visorPagina={...(S.visorPagina||{}),[l.id]:V.n};
+    const comparar=V.doc==="comparar";
+    const area=comparar?hoja("original","Original")+hoja("traducido","Traducción"):hoja(V.doc);
+    document.getElementById("v-hojas").className=`visor-paginas ${comparar?"dos":"una"}`;
+    document.getElementById("v-hojas").style.setProperty("--ancho",`${(comparar?560:720)*V.esc}px`);
+    document.getElementById("v-hojas").innerHTML=area;
+    document.getElementById("v-n").value=V.n;
+    document.getElementById("v-ant").disabled=V.n<=1;document.getElementById("v-sig").disabled=V.n>=total();
+    c.querySelectorAll("[data-vdoc]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.vdoc===V.doc));
+  };
+  const opciones=[hay("traducido")&&["comparar","Comparar"],hay("traducido")&&["traducido","Traducción"],["original","Original"],hay("bilingue")&&info.tipo==="epub"&&["bilingue","Bilingüe"]].filter(Boolean);
+  c.innerHTML=`<div class="visor-barra"><div class="segmento">${opciones.map(([k,t])=>`<button data-vdoc="${k}">${t}</button>`).join("")}</div>
+  <div class="grupo"><button class="icono" id="v-ant" aria-label="Anterior">‹</button><label><span hidden>Página</span><input type="number" id="v-n" min="1" max="${total()}"></label><span class="vacio-t">de ${num(total())}</span><button class="icono" id="v-sig" aria-label="Siguiente">›</button></div>
+  ${info.tipo==="pdf"?`<div class="grupo"><button class="icono" id="v-menos" aria-label="Reducir">−</button><button class="icono" id="v-mas" aria-label="Ampliar">+</button></div>`:""}
+  <form class="grupo" id="v-buscar" style="flex:1;min-width:190px"><input type="text" id="v-q" placeholder="Buscar en el libro" aria-label="Buscar en el libro"></form></div><div class="resultados" id="v-res" hidden></div><div id="v-hojas"></div>`;
+  const ir=n=>{V.n=Math.min(total(),Math.max(1,n));pintarV()};
+  document.getElementById("v-ant").onclick=()=>ir(V.n-1);document.getElementById("v-sig").onclick=()=>ir(V.n+1);
+  document.getElementById("v-n").onchange=e=>ir(parseInt(e.target.value)||1);
+  c.querySelectorAll("[data-vdoc]").forEach(b=>b.onclick=()=>{V.doc=b.dataset.vdoc;if(V.doc==="bilingue"||V.doc==="original"||V.doc==="traducido"){}pintarV()});
+  const mas=document.getElementById("v-mas");if(mas){mas.onclick=()=>{V.esc=Math.min(2.4,V.esc+.2);V.ancho=V.esc>1.3?1600:1200;pintarV()};document.getElementById("v-menos").onclick=()=>{V.esc=Math.max(.5,V.esc-.2);pintarV()}}
+  document.getElementById("v-buscar").onsubmit=async e=>{e.preventDefault();const q=document.getElementById("v-q").value.trim(),r=document.getElementById("v-res");if(q.length<2){r.hidden=true;return}const d=await api(`/api/libros/${l.id}/buscar?q=${encodeURIComponent(q)}`);r.hidden=false;r.innerHTML=d.length?d.map(x=>`<button data-ir-pag="${(/página (\d+)/.exec(x.lugar)||[])[1]||""}" data-seccion="${esc(x.lugar)}"><b>${esc(x.lugar)}</b> · ${esc(x.texto)}</button>`).join(""):`<p class="vacio-t">Sin resultados.</p>`;r.querySelectorAll("[data-ir-pag]").forEach(b=>b.onclick=()=>{if(b.dataset.irPag)ir(+b.dataset.irPag);else if(info.tipo==="epub"){const i=(docs.traducido||docs.original).secciones.findIndex(x=>x.includes(b.dataset.seccion));if(i>=0)ir(i+1)}})};
+  S.teclado=e=>{if(!document.getElementById("v-hojas")||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key==="ArrowRight")ir(V.n+1);if(e.key==="ArrowLeft")ir(V.n-1)};
+  pintarV();
+}
+addEventListener("keydown",e=>S.teclado&&S.teclado(e));
+function md(t){const li=esc(t).split(/\n/);let h="",l=null;const fin=()=>{if(l){h+=`</${l}>`;l=null}},f=s=>s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\*(.+?)\*/g,"<i>$1</i>");for(const x of li){let m;if(m=x.match(/^#{1,4}\s+(.*)/)){fin();h+=`<h3>${f(m[1])}</h3>`}else if(m=x.match(/^\s*[-*]\s+(.*)/)){if(l!=="ul"){fin();h+="<ul>";l="ul"}h+=`<li>${f(m[1])}</li>`}else if(m=x.match(/^\s*\d+[.)]\s+(.*)/)){if(l!=="ol"){fin();h+="<ol>";l="ol"}h+=`<li>${f(m[1])}</li>`}else if(x.trim()){fin();h+=`<p>${f(x)}</p>`}else fin()}fin();return h}
+function enlazar(l){
+  document.querySelectorAll("[name=motor]").forEach(r=>r.onchange=()=>estimar(l));estimar(l);
+  document.querySelectorAll("[data-termino]").forEach(b=>b.onclick=()=>{const g=document.getElementById("glosario");g.value=(g.value.trim()?g.value.trim()+"\n":"")+b.dataset.termino+" = ";g.focus();b.remove()});
+  const t=document.getElementById("traducir");
+  if(t)t.onclick=async()=>{const c={motor:document.querySelector("[name=motor]:checked")?.value,origen:document.getElementById("origen").value,destino:document.getElementById("destino").value,glosario:document.getElementById("glosario").value,bilingue:document.getElementById("bilingue").checked};const err=document.getElementById("error-inicio");
+    if(c.origen===c.destino){err.innerHTML=`<div class="aviso rubor">El idioma del libro y el de destino son el mismo.</div>`;return}
+    t.disabled=true;try{await post(`/api/libros/${l.id}/traducir`,c);await pintar()}catch(e){t.disabled=false;err.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}};
+  const d=document.getElementById("detener");if(d)d.onclick=async()=>{d.disabled=true;d.textContent="Deteniendo…";await post(`/api/libros/${l.id}/detener`,{})};
+  document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.pestana=b.dataset.p;pintar()});
+  document.querySelectorAll("[data-filtro]").forEach(b=>b.onclick=()=>{S.filtroC=b.dataset.filtro;pintar()});
+  document.querySelectorAll("[data-ver]").forEach(b=>b.onclick=()=>{S.visorPagina={...(S.visorPagina||{}),[l.id]:+b.dataset.ver};S.pestana="leer";pintar()});
+  const vo=document.getElementById("ver-original");if(vo)vo.onclick=()=>{const panel=vo.closest(".columnas");panel.outerHTML=`<div class="fila" style="margin-bottom:10px"><button class="boton suave" id="prep-volver">Volver a preparar</button></div><div id="visor"></div>`;document.getElementById("prep-volver").onclick=()=>pintar();iniciarVisor(l)};
+  const rep=document.getElementById("repetir");if(rep)rep.onclick=()=>pintar(true);
+  const bo=document.getElementById("borrar");if(bo)bo.onclick=async()=>{if(bo.dataset.ok){await api(`/api/libros/${l.id}`,{method:"DELETE"});biblioteca()}else{bo.dataset.ok="1";bo.textContent="Pulsa otra vez para confirmar"}};
+  const rc=document.getElementById("res-claude"),rf=document.getElementById("res-frases");
+  const res=async(metodo,b)=>{const s=document.getElementById("sal-res");b.disabled=true;s.innerHTML=`<p class="vacio-t">${metodo==="claude"?"Claude está leyendo el libro; puede tardar unos minutos…":"Buscando las frases más representativas…"}</p>`;
+    try{const r=await post(`/api/libros/${l.id}/resumen`,{metodo,nivel:document.getElementById("nivel").value});s.innerHTML=r.metodo==="claude"?`<div class="markdown">${md(r.markdown)}</div>`:(r.frases.length?`<div class="aviso cielo">Frases literales del libro. No es un resumen redactado.</div><ol class="lista-ideas">${r.frases.map(x=>`<li><span>${esc(x.texto)}<small>${esc(x.lugar)}</small></span></li>`).join("")}</ol>`:`<div class="aviso mantequilla">No se han encontrado frases adecuadas.</div>`)}catch(e){s.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}b.disabled=false};
+  if(rc)rc.onclick=()=>res("claude",rc);if(rf)rf.onclick=()=>res("frases",rf);
+  const fp=document.getElementById("f-preg");
+  if(fp)fp.onsubmit=async e=>{e.preventDefault();const s=document.getElementById("sal-preg"),q=document.getElementById("pregunta").value.trim();if(!q)return;s.innerHTML=`<p class="vacio-t">Buscando…</p>`;
+    try{const r=await post(`/api/libros/${l.id}/preguntar`,{pregunta:q,metodo:claudeListo()?"claude":"local"});s.innerHTML=(r.respuesta?`<div class="markdown" style="margin-bottom:20px">${md(r.respuesta)}</div><div class="etiqueta" style="margin-bottom:9px">Pasajes consultados</div>`:"")+(r.pasajes.length?r.pasajes.map(p=>`<blockquote class="pasaje">${esc(p.texto)}<small>${esc(p.lugar)}</small></blockquote>`).join(""):`<div class="aviso mantequilla">No hay pasajes relacionados con esa pregunta.</div>`)}catch(err){s.innerHTML=`<div class="aviso rubor">${esc(err.message)}</div>`}};
+}
+async function ajustes(){
+  parar();S.actual=null;marcar("ajustes",true,"Ajustes");await cargarAjustes();document.getElementById("version").textContent=S.version?`Versión ${S.version}`:"";const a=S.ajustes;
+  const bloque=(id,t,x,c)=>`<div class="ajuste"><h3>${t}</h3><p>${x}</p>${c}<div class="resultado" id="pr-${id}"></div></div>`;
+  const clave=(k,v,e,m)=>`<div class="fila-clave"><input type="password" id="${k}" aria-label="${e}" autocomplete="off" placeholder="${v?`Guardada (${esc(v)})`:e}"><button type="button" class="boton suave" data-probar="${m}">Probar</button></div>`;
+  $v.innerHTML=`<button class="volver" id="volver-a">← Biblioteca</button><div class="vista-t"><div><h1>Ajustes</h1></div></div>
+  <section class="panel"><h2>Motores de traducción</h2><p class="vacio-t" style="margin-bottom:12px">Las claves se guardan solo en este ordenador.</p>
+  ${bloque("azure","Azure Translator",`2 millones de caracteres gratis al mes con el nivel F0.`,clave("azure_key",a.azure_key,"Clave de Azure","azure")+`<input type="text" id="azure_region" aria-label="Región de Azure" value="${esc(a.azure_region)}" style="margin-top:8px" placeholder="Región, por ejemplo westeurope">`)}
+  ${bloque("deepl","DeepL API Free","500.000 caracteres gratis al mes.",clave("deepl_key",a.deepl_key,"Clave de DeepL","deepl"))}
+  ${bloque("libre","LibreTranslate","Sin cuota. Requiere tenerlo en marcha en vuestro equipo.",`<div class="fila-clave"><input type="text" id="libre_url" aria-label="Dirección de LibreTranslate" value="${esc(a.libre_url)}"><button type="button" class="boton suave" data-probar="libre">Probar</button></div>`)}
+  ${bloque("claude","API de Claude (opcional)","Para resúmenes redactados y respuestas. Se paga por uso, aparte de la suscripción.",clave("claude_key",a.claude_key,"Clave de la API de Claude","claude"))}
+  <div style="margin-top:14px"><button class="boton" id="guardar">Guardar cambios</button></div></section>
+  <section class="panel"><h2>Actualizar Lumbre</h2><p style="margin-bottom:12px">Tienes la versión <b>${esc(S.version)}</b>. La app se renueva sola en unos segundos, sin reinstalar ni perder nada.</p><div id="res-act"></div><div class="fila"><button class="boton" id="buscar-act">Buscar actualizaciones</button><button class="boton suave" id="act">Instalar desde archivo</button></div></section>`;
+  document.getElementById("volver-a").onclick=biblioteca;
+  const recoger=()=>{const c={azure_region:document.getElementById("azure_region").value,libre_url:document.getElementById("libre_url").value};for(const k of["azure_key","deepl_key","claude_key"]){const v=document.getElementById(k).value.trim();if(v)c[k]=v}return c};
+  document.getElementById("guardar").onclick=async()=>{await post("/api/ajustes",recoger());tostada("Ajustes guardados");ajustes()};
+  document.querySelectorAll("[data-probar]").forEach(b=>b.onclick=async()=>{const id=b.dataset.probar,s=document.getElementById(`pr-${id}`);s.textContent="Probando…";await post("/api/ajustes",recoger());const r=await post(`/api/motores/${id}/probar`,{});s.textContent=r.ok?`Funciona: «${r.muestra}»${r.restante!=null?` · quedan ${num(r.restante)} caracteres este mes`:""}`:r.mensaje});
+  document.getElementById("act").onclick=()=>document.getElementById("selector-act").click();
+  document.getElementById("buscar-act").onclick=async()=>{const c=document.getElementById("res-act");c.innerHTML=`<div class="aviso cielo">Buscando…</div>`;try{avisoAct=await api("/api/actualizaciones");if(avisoAct.disponible){c.innerHTML=`<div class="aviso cielo fila" style="justify-content:space-between"><span>Versión nueva: <b>${esc(avisoAct.version)}</b></span><button class="boton suave" id="ar2">Actualizar ahora</button></div>`;document.getElementById("ar2").onclick=()=>instalarRemota(c)}else c.innerHTML=`<div class="aviso salvia">Ya tienes la última versión.</div>`}catch(e){c.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}};
+}
+document.getElementById("selector-act").onchange=async e=>{
+  const a=e.target.files[0];e.target.value="";if(!a)return;const s=document.getElementById("res-act");s.innerHTML=`<div class="aviso cielo">Instalando…</div>`;
+  const d=new FormData();d.append("file",a);
+  try{const r=await api("/api/actualizar",{method:"POST",body:d});
+    esperarReinicio(r,s);
+  }catch(err){s.innerHTML=`<div class="aviso rubor">${esc(err.message)}</div>`}
+};
+const latido=()=>fetch("/api/latido",{method:"POST"}).catch(()=>{});latido();setInterval(latido,15000);
+biblioteca();
+</script>
+</body>
+</html>

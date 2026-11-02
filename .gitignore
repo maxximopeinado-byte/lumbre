@@ -1,0 +1,6 @@
+.venv/
+datos/
+entrega/
+__pycache__/
+*.pyc
+.pytest_cache/
