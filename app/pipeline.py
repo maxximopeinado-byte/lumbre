@@ -61,6 +61,7 @@ class Item:
     where: str = ""
     result: str = ""
     extra_checks: dict = field(default_factory=dict)
+    kind: str = "parrafo"
 
     @property
     def text(self) -> str:
@@ -93,6 +94,9 @@ class Translator:
         self.should_stop = should_stop or (lambda: False)
         self.on_stage = on_stage or (lambda stage, done, total: None)
         self.reuse_any = reuse_any
+        self.ignore_memory = False
+        self.pages: set[int] | None = None
+        self.segments: list[dict] = []
         self.issues: list[dict] = []
         self.reused = 0
         self.sent = 0
@@ -126,8 +130,8 @@ class Translator:
         done = 0
         pending: list[str] = []
         for fragment, entry in unique.items():
-            cached = self.memory.get(entry["key"])
-            if cached is None and self.reuse_any:
+            cached = None if self.ignore_memory else self.memory.get(entry["key"])
+            if cached is None and self.reuse_any and not self.ignore_memory:
                 cached = self.memory.get(entry["any"])
             if cached is not None:
                 entry["result"] = cached
@@ -171,6 +175,16 @@ class Translator:
             batch_size += size
         flush()
 
+        seen: set[str] = set()
+        for item in items:
+            protected = protect_terms(item.fragment, self.glossary)
+            if protected not in seen:
+                seen.add(protected)
+                entry = unique[protected]
+                self.segments.append({
+                    "original": plain(re.sub(r'<span\b[^>]*notranslate[^>]*>#</span>', "", item.fragment)), "fragmento": protected, "traduccion": entry["result"], "clave": entry["key"],
+                    "clave_general": entry["any"], "lugar": item.where, "tipo": item.kind,
+                })
         for fragment, entry in unique.items():
             for item in entry["items"]:
                 item.result = entry["result"]

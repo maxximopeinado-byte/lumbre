@@ -348,35 +348,38 @@ def _translate(book: Book, output: Path, bilingual_output: Path | None, translat
     entries: list[tuple] = []
     items: list[Item] = []
 
-    def register(entry, where: str) -> None:
+    def register(entry, where: str, kind: str = "parrafo") -> None:
         fragment = normalize(entry.fragment)
         if fragment and has_letters(re.sub(r"<[^>]+>", "", fragment)):
-            item = Item(fragment=fragment, where=where)
+            item = Item(fragment=fragment, where=where, kind=kind)
             entries.append((entry, item))
             items.append(item)
 
-    for name in book.documents:
+    for position, name in enumerate(book.documents, 1):
         tree = _parse(book.zip.read(name))
         documents[name] = tree
+        if translator.pages is not None and position not in translator.pages:
+            continue
         root = tree.getroot()
         body = root.find(f"{{{XHTML}}}body")
         found: list = []
         _collect(body if body is not None else root, found)
         for entry in found:
-            register(entry, _where(name))
+            heading = isinstance(entry, Block) and _local(entry.element) in ("h1", "h2", "h3")
+            register(entry, _where(name), "titulo" if heading else "parrafo")
         head_title = root.find(f"{{{XHTML}}}head/{{{XHTML}}}title")
         if head_title is not None and head_title.text and has_letters(head_title.text):
-            register(TextRun(head_title, "text"), _where(name))
+            register(TextRun(head_title, "text"), "metadatos")
 
     ncx_tree = None
-    if book.ncx:
+    if book.ncx and translator.pages is None:
         ncx_tree = _parse(book.zip.read(book.ncx))
         for node in ncx_tree.getroot().iter(f"{{{NCX}}}text"):
             if node.text and has_letters(node.text):
                 register(TextRun(node, "text"), "índice")
 
     opf_root = book.opf.getroot()
-    for tag in ("title", "description", "subject"):
+    for tag in ("title", "description", "subject") if translator.pages is None else ():
         for node in opf_root.iterfind(f".//{{{DC}}}{tag}"):
             if node.text and has_letters(node.text):
                 register(TextRun(node, "text"), "metadatos")

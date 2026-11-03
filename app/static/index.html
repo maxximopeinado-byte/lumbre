@@ -25,12 +25,19 @@
   --boton-t:#fbf8f3;--sombra:0 1px 2px rgba(95,82,72,.06),0 12px 32px -20px rgba(95,82,72,.3);
   --display:"Newsreader",Georgia,"Times New Roman",serif;--texto:"Figtree","Segoe UI",system-ui,sans-serif;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark;
   --lino:#272220;--papel:#312b28;--avena:#3c3531;--topo-claro:#574d46;--topo:#a39588;--topo-hondo:#d9cdc1;--cafe:#f1e9e0;--suave:#bdb0a4;
   --salvia:#3c4739;--salvia-t:#d4e2cd;--rubor:#4d3a37;--rubor-t:#f0d3cd;--cielo:#374449;--cielo-t:#d0e0e7;--mantequilla:#4a412a;--mantequilla-t:#efe0b4;--lavanda:#413b4b;--lavanda-t:#ddd5e8;
   --boton-t:#272220;--sombra:0 1px 2px rgba(0,0,0,.2),0 14px 34px -20px rgba(0,0,0,.6);
 }}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --lino:#272220;--papel:#312b28;--avena:#3c3531;--topo-claro:#574d46;--topo:#a39588;--topo-hondo:#d9cdc1;--cafe:#f1e9e0;--suave:#bdb0a4;
+  --salvia:#3c4739;--salvia-t:#d4e2cd;--rubor:#4d3a37;--rubor-t:#f0d3cd;--cielo:#374449;--cielo-t:#d0e0e7;--mantequilla:#4a412a;--mantequilla-t:#efe0b4;--lavanda:#413b4b;--lavanda-t:#ddd5e8;
+  --boton-t:#272220;--sombra:0 1px 2px rgba(0,0,0,.2),0 14px 34px -20px rgba(0,0,0,.6);
+}
+:root[data-theme="light"]{color-scheme:light}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%}
 body{background:var(--lino);color:var(--cafe);font:400 16px/1.55 var(--texto);-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -76,6 +83,24 @@ button{touch-action:manipulation}
 .minibarra i{display:block;height:100%;background:var(--topo)}
 .vacio{background:var(--papel);border-radius:22px;padding:28px 26px;box-shadow:var(--sombra)}
 .vacio h3{font-size:22px;margin-bottom:6px}.vacio p{color:var(--suave);font-size:15px}
+.herramientas{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.herramientas input,.herramientas select{flex:1;min-width:130px;min-height:40px;background:var(--papel)}
+.menu{position:relative}
+.menu summary{list-style:none;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;cursor:pointer;color:var(--topo-hondo);font-size:20px;line-height:1}
+.menu summary::-webkit-details-marker{display:none}
+.menu summary:hover{background:var(--avena)}
+.menu div{position:absolute;right:0;top:36px;z-index:15;min-width:190px;background:var(--papel);border-radius:14px;padding:6px;box-shadow:0 18px 44px -18px rgba(59,49,42,.6)}
+.menu button{display:block;width:100%;min-height:40px;border:0;background:none;text-align:left;border-radius:9px;padding:8px 11px;cursor:pointer;font-size:14.5px}
+.menu button:hover{background:var(--avena)}.menu button.peligro{color:var(--rubor-t)}
+.libro-fila{display:flex;align-items:center;gap:4px}
+dialog.modal{border:0;border-radius:20px;background:var(--papel);color:var(--cafe);padding:22px;width:min(460px,calc(100vw - 32px));box-shadow:0 40px 90px -30px rgba(59,49,42,.55)}
+dialog.modal::backdrop{background:rgba(59,49,42,.32)}
+dialog.modal h2{font-size:23px;margin-bottom:12px}
+.tostada button{margin-left:12px;border:0;background:none;color:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+.segmento-ed{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding-block:12px;border-bottom:1px solid var(--avena)}
+.segmento-ed .orig{font:400 15.5px/1.45 var(--display);color:var(--suave);overflow-wrap:anywhere}
+.segmento-ed small{display:block;color:var(--suave);font-size:12.5px;margin-bottom:4px}
+.segmento-ed textarea{min-height:92px;font:400 16px/1.42 var(--display)}
 .pasos{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:12px}
 .pasos li{display:grid;grid-template-columns:28px 1fr;gap:12px;font-size:15px}
 .pasos b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--avena);font:500 15px var(--display);color:var(--topo-hondo)}
@@ -120,7 +145,7 @@ button{touch-action:manipulation}
 .campo{display:grid;gap:6px;margin-bottom:15px}
 .campo label,.etiqueta{font-size:13.5px;font-weight:600;color:var(--topo-hondo)}
 .campo small{color:var(--suave);font-size:13px;line-height:1.45}
-select,input[type=text],input[type=password],textarea{width:100%;min-height:44px;background:var(--lino);border:1px solid transparent;border-radius:12px;padding:10px 13px;font-size:16px;transition:border-color .2s,background .2s}
+select,input[type=text],input[type=search],input[type=number],input[type=password],textarea{width:100%;min-height:44px;background:var(--lino);border:1px solid transparent;border-radius:12px;padding:10px 13px;font-size:16px;transition:border-color .2s,background .2s}
 select:focus,input:focus,textarea:focus{background:var(--papel);border-color:var(--topo-claro);outline:none}
 textarea{min-height:88px;resize:vertical;line-height:1.45}
 .dos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -194,6 +219,8 @@ details.plegable .interior{padding-bottom:14px}
 .vacio-t{font-size:15px;color:var(--suave)}
 .tostada{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;background:var(--cafe);color:var(--lino);padding:10px 18px;border-radius:999px;font-size:14.5px;max-width:calc(100vw - 32px)}
 .pestanas{display:none}
+.pestana svg{width:22px;height:22px;flex:none}
+.libro{position:relative}.libro:has(.menu[open]){z-index:20}
 @media (max-width:760px){
   .lateral{display:none}
   .volver{display:none}
@@ -217,8 +244,11 @@ details.plegable .interior{padding-bottom:14px}
   .pestana{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:52px;border:0;background:none;border-radius:12px;cursor:pointer;color:var(--suave);font-size:12px;font-weight:500}
   .pestana[aria-current=page]{color:var(--cafe);background:var(--avena)}
   .sin-pestanas .pestanas{display:none}
+.pestana svg{width:22px;height:22px;flex:none}
+.libro{position:relative}.libro:has(.menu[open]){z-index:20}
   .sin-pestanas .vista{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
   .pregunta{grid-template-columns:minmax(0,1fr)}
+  .segmento-ed{grid-template-columns:minmax(0,1fr)}
   .accion-fija{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px))}
   .panel{border-radius:18px}
   .tostada{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
@@ -245,7 +275,8 @@ details.plegable .interior{padding-bottom:14px}
 </div>
 <div class="soltar" id="soltar" hidden><div>Suelta aquí tu libro</div></div>
 <div class="tostada" id="tostada" role="status" hidden></div>
-<input type="file" id="selector" accept=".epub,.pdf,application/epub+zip,application/pdf" hidden>
+<dialog class="modal" id="modal"></dialog>
+<input type="file" id="selector" multiple accept=".epub,.pdf,application/epub+zip,application/pdf" hidden>
 <input type="file" id="selector-act" accept=".zip" hidden>
 <script>
 const PASTELES=[["--salvia","--salvia-t"],["--rubor","--rubor-t"],["--cielo","--cielo-t"],["--mantequilla","--mantequilla-t"],["--lavanda","--lavanda-t"]];
@@ -259,7 +290,12 @@ const ETIQUETA={listo:["Por traducir","cielo"],"en cola":["En cola","mantequilla
 const ficha=e=>{const[t,c]=ETIQUETA[e]||[e,""];return`<span class="ficha ${c}">${esc(t)}</span>`};
 async function api(ruta,op={}){const r=await fetch(ruta,op);let d=null;try{d=await r.json()}catch{}if(!r.ok)throw new Error(d?.detail||"No se ha podido completar la operación.");return d}
 const post=(ruta,c)=>api(ruta,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(c)});
-function tostada(t){const e=document.getElementById("tostada");e.textContent=t;e.hidden=false;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=true,3600)}
+function tostada(t,accion,fn){const e=document.getElementById("tostada");e.textContent=t;if(accion){const b=document.createElement("button");b.textContent=accion;b.onclick=()=>{e.hidden=true;fn()};e.append(b)}e.hidden=false;clearTimeout(e._t);e._t=setTimeout(()=>e.hidden=true,accion?9000:3600)}
+const guardado=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem("lumbre."+k));localStorage.setItem("lumbre."+k,JSON.stringify(v))}catch{}return undefined};
+function aplicarTema(t){if(t&&t!=="sistema")document.documentElement.dataset.theme=t;else delete document.documentElement.dataset.theme}
+aplicarTema(guardado("tema"));
+function pregunta({titulo,cuerpo,aceptar,peligro,alAbrir}){return new Promise(res=>{const d=document.getElementById("modal");d.innerHTML=`<h2>${esc(titulo)}</h2><form method="dialog">${cuerpo}<div class="fila" style="justify-content:flex-end;margin-top:14px"><button type="button" class="boton suave" id="m-no">Cancelar</button><button class="boton" id="m-si" ${peligro?'style="background:var(--rubor-t)"':""}>${esc(aceptar)}</button></div></form>`;document.getElementById("m-no").onclick=()=>{d.close();res(false)};d.querySelector("form").onsubmit=e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target));d.close();res(data)};d.showModal();if(alAbrir)alAbrir(d)})}
+const bytes=n=>n>1e9?`${(n/1e9).toFixed(1)} GB`:`${Math.round((n||0)/1e6)} MB`;
 function marcar(seccion,conPestanas=true,titulo="Lumbre",volver=false){
   document.querySelectorAll("[data-ir]").forEach(b=>{if(b.dataset.ir===seccion)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
   document.getElementById("app").classList.toggle("sin-pestanas",!conPestanas);
@@ -276,6 +312,7 @@ async function biblioteca(){
   S.version=est.version||S.version;document.getElementById("version").textContent=S.version?`Versión ${S.version}`:"";
   if(est.recuperando){$v.innerHTML=`<div class="aviso cielo">Buscando tus libros y ajustes de la versión anterior…</div>`;S.temp=setTimeout(biblioteca,1000);return}
   let libros=[];try{libros=await api("/api/libros")}catch{}
+  S.libros=libros;
   const vis=l=>`<span class="ficha salvia">${l}</span>`;
   $v.innerHTML=`<div id="aviso-act"></div><div class="portada"><section>
     <h1 class="titular">Tus libros, en tu idioma y <em>con su forma de siempre</em></h1>
@@ -286,17 +323,41 @@ async function biblioteca(){
   </section><section>
     <div class="seccion-t"><h2>Tu biblioteca</h2><span>${libros.length?`${libros.length} ${libros.length===1?"libro":"libros"}`:""}</span></div>
     ${est.recuperados?`<div class="aviso salvia">Se han recuperado ${est.recuperados} libros de la versión anterior.</div>`:""}
-    ${libros.length?`<div class="estante">${libros.map(tarjeta).join("")}</div>`:`<div class="vacio"><h3>Aún no hay libros en el estante</h3><p>Así será el primero:</p><ol class="pasos"><li><b>1</b><span>Carga el libro y revisa cuánta cuota necesita.</span></li><li><b>2</b><span>Elige el motor y añade los términos que no deben variar.</span></li><li><b>3</b><span>Léelo en el visor y revisa el informe de calidad.</span></li></ol></div>`}
+    ${libros.length>1?`<div class="herramientas"><input type="search" id="b-q" placeholder="Buscar por título o autor" aria-label="Buscar en la biblioteca" value="${esc(S.bq||"")}"><select id="b-orden" aria-label="Ordenar">${[["reciente","Más recientes"],["titulo","Título"],["estado","Estado"]].map(([k,t])=>`<option value="${k}" ${(S.borden||"reciente")===k?"selected":""}>${t}</option>`).join("")}</select></div>`:""}
+    ${libros.length?`<div class="estante" id="estante"></div>`:`<div class="vacio"><h3>Aún no hay libros en el estante</h3><p>Así será el primero:</p><ol class="pasos"><li><b>1</b><span>Carga el libro y revisa cuánta cuota necesita.</span></li><li><b>2</b><span>Elige el motor y añade los términos que no deben variar.</span></li><li><b>3</b><span>Léelo en el visor y revisa el informe de calidad.</span></li></ol></div>`}
   </section></div>`;
-  document.querySelectorAll("[data-libro]").forEach(b=>b.onclick=e=>{if(e.target.closest("[data-reanudar]"))return;abrir(b.dataset.libro)});
-  document.querySelectorAll("[data-reanudar]").forEach(b=>b.onclick=async e=>{e.stopPropagation();const id=b.dataset.reanudar;try{const l=await api(`/api/libros/${id}`);await post(`/api/libros/${id}/traducir`,{...(l.opciones||{}),reanudar:true});abrir(id)}catch(err){tostada(err.message);abrir(id)}});
+  pintarEstante();
+  const bq=document.getElementById("b-q");if(bq){bq.oninput=()=>{S.bq=bq.value;pintarEstante()};document.getElementById("b-orden").onchange=e=>{S.borden=e.target.value;pintarEstante()}}
   comprobarActualizacion();
   if(libros.some(l=>ACTIVOS.includes(l.estado)))S.temp=setTimeout(biblioteca,4000);
+}
+function pintarEstante(){
+  const c=document.getElementById("estante");if(!c)return;
+  const f=tools=>tools.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(),q=f(S.bq||"");
+  let lista=S.libros.filter(l=>!q||f(`${l.titulo||l.archivo} ${l.autor||""}`).includes(q));
+  const orden=S.borden||"reciente";
+  if(orden==="titulo")lista=[...lista].sort((a,b)=>(a.titulo||a.archivo).localeCompare(b.titulo||b.archivo,"es"));
+  if(orden==="estado")lista=[...lista].sort((a,b)=>String(a.estado).localeCompare(String(b.estado)));
+  c.innerHTML=lista.length?lista.map(tarjeta).join(""):`<p class="vacio-t">Ningún libro coincide con la búsqueda.</p>`;
+  c.querySelectorAll("[data-libro]").forEach(b=>{b.onclick=e=>{if(e.target.closest("[data-reanudar],.menu"))return;abrir(b.dataset.libro)};b.onkeydown=e=>{if(e.key==="Enter"&&e.target===b)abrir(b.dataset.libro)}});
+  c.querySelectorAll("[data-reanudar]").forEach(b=>b.onclick=async e=>{e.stopPropagation();const id=b.dataset.reanudar;try{const l=await api(`/api/libros/${id}`);await post(`/api/libros/${id}/traducir`,{...(l.opciones||{}),glosario:l.opciones?.glosario_libro??l.opciones?.glosario??"",reanudar:true});abrir(id)}catch(err){tostada(err.message);abrir(id)}});
+  c.querySelectorAll("[data-accion]").forEach(b=>b.onclick=e=>{e.stopPropagation();b.closest("details").open=false;accionLibro(b.dataset.accion,S.libros.find(x=>x.id===b.dataset.id))});
+}
+async function accionLibro(accion,l){
+  if(accion==="abrir")return abrir(l.id);
+  if(accion==="retraducir"){await abrir(l.id,true);return}
+  if(accion==="renombrar"){const r=await pregunta({titulo:"Cambiar datos del libro",aceptar:"Guardar",cuerpo:`<div class="campo"><label for="m-t">Título</label><input type="text" id="m-t" name="titulo" value="${esc(l.titulo||l.archivo)}" required></div><div class="campo"><label for="m-a">Autor</label><input type="text" id="m-a" name="autor" value="${esc(l.autor||"")}"></div>`});if(r){await post(`/api/libros/${l.id}/datos`,r);tostada("Datos guardados");biblioteca()}return}
+  if(accion==="borrar"){await borrarLibro(l)}
+}
+async function borrarLibro(l){
+  const r=await pregunta({titulo:"¿Mover a la papelera?",aceptar:"Mover a la papelera",peligro:true,cuerpo:`<p>«${esc(l.titulo||l.archivo)}» se guardará en la papelera 30 días. Lo ya traducido sigue en la memoria.</p>`});if(!r)return;
+  try{await api(`/api/libros/${l.id}`,{method:"DELETE"});await biblioteca();tostada("Libro en la papelera","Deshacer",async()=>{await post(`/api/libros/${l.id}/restaurar`,{});biblioteca()})}catch(e){tostada(e.message)}
 }
 function tarjeta(l){
   const[f,t]=color(l.id);const activo=ACTIVOS.includes(l.estado),puede=["pausado","detenido","error"].includes(l.estado)&&l.opciones?.motor;
   const det=[l.autor,`${num(l.unidades)} ${l.unidad}`,(l.tipo||"").toUpperCase()].filter(Boolean).join(" · ");
-  return`<div class="libro" role="button" tabindex="0" data-libro="${l.id}"><span class="lomo" style="background:var(${f});color:var(${t})"><i></i></span><span style="min-width:0"><h3>${esc(l.titulo||l.archivo)}</h3><p>${esc(det)}</p>${activo?`<div class="minibarra"><i style="width:${l.progreso||0}%"></i></div>`:""}</span><span class="libro-fin">${ficha(l.estado)}${puede?`<button class="mini-accion" data-reanudar="${l.id}">Reanudar</button>`:""}</span></div>`;
+  const op=(a,x,c="")=>`<button type="button" class="${c}" data-accion="${a}" data-id="${l.id}">${x}</button>`;
+  return`<div class="libro" role="button" tabindex="0" data-libro="${l.id}"><span class="lomo" style="background:var(${f});color:var(${t})"><i></i></span><span style="min-width:0"><h3>${esc(l.titulo||l.archivo)}</h3><p>${esc(det)}</p>${activo?`<div class="minibarra"><i style="width:${l.progreso||0}%"></i></div>`:""}</span><span class="libro-fin"><span class="libro-fila">${ficha(l.estado)}${activo?"":`<details class="menu"><summary aria-label="Más acciones">⋯</summary><div>${op("abrir","Abrir")}${op("retraducir",l.estado==="listo"?"Traducir":"Retraducir")}${op("renombrar","Cambiar título y autor")}${op("borrar","Mover a la papelera","peligro")}</div></details>`}</span>${puede?`<button class="mini-accion" data-reanudar="${l.id}">Reanudar</button>`:""}</span></div>`;
 }
 let avisoAct=null;
 async function comprobarActualizacion(){
@@ -312,13 +373,14 @@ function esperarReinicio(r,s){
   const espera=async n=>{try{const x=await api("/api/estado");if(x.version===r.version){location.reload();return}}catch{}if(n>0)setTimeout(()=>espera(n-1),1000);else s.innerHTML=`<div class="aviso mantequilla">Cierra y vuelve a abrir la app para terminar.</div>`};
   setTimeout(()=>espera(30),1500);
 }
-async function subir(a){
-  if(!a)return;tostada(`Leyendo ${a.name}…`);
+async function subir(a,varios){
+  if(!a)return null;tostada(`Leyendo ${a.name}…`);
   const d=new FormData();d.append("file",a);
-  try{const l=await api("/api/libros",{method:"POST",body:d});document.getElementById("tostada").hidden=true;abrir(l.id)}
-  catch(e){document.getElementById("tostada").hidden=true;if(!document.getElementById("error-carga"))await biblioteca();document.getElementById("error-carga").innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}
+  try{const l=await api("/api/libros",{method:"POST",body:d});document.getElementById("tostada").hidden=true;if(l.duplicado)tostada(`«${l.titulo||l.archivo}» ya estaba en la biblioteca`);if(!varios)abrir(l.id);return l}
+  catch(e){document.getElementById("tostada").hidden=true;if(!document.getElementById("error-carga"))await biblioteca();document.getElementById("error-carga").innerHTML+=`<div class="aviso rubor">${esc(a.name)}: ${esc(e.message)}</div>`;return null}
 }
-document.getElementById("selector").onchange=e=>{subir(e.target.files[0]);e.target.value=""};
+async function subirVarios(lista){const a=[...lista];if(a.length<2)return subir(a[0]);let n=0;for(const x of a){if(await subir(x,true))n++}await biblioteca();tostada(`${n} libros añadidos`)}
+document.getElementById("selector").onchange=e=>{subirVarios(e.target.files);e.target.value=""};
 document.querySelectorAll("[data-anadir]").forEach(b=>b.onclick=()=>document.getElementById("selector").click());
 document.querySelectorAll("[data-ir]").forEach(b=>b.onclick=()=>b.dataset.ir==="ajustes"?ajustes():biblioteca());
 document.getElementById("barra-volver").onclick=biblioteca;
@@ -326,9 +388,9 @@ let arrastres=0;const soltar=document.getElementById("soltar");
 addEventListener("dragenter",e=>{e.preventDefault();arrastres++;soltar.hidden=false});
 addEventListener("dragover",e=>e.preventDefault());
 addEventListener("dragleave",()=>{if(--arrastres<=0){arrastres=0;soltar.hidden=true}});
-addEventListener("drop",e=>{e.preventDefault();arrastres=0;soltar.hidden=true;subir(e.dataTransfer.files[0])});
+addEventListener("drop",e=>{e.preventDefault();arrastres=0;soltar.hidden=true;subirVarios(e.dataTransfer.files)});
 
-async function abrir(id){parar();S.actual=id;S.pestana="leer";await cargarAjustes();await pintar()}
+async function abrir(id,preparar){parar();S.actual=id;S.pestana="leer";await cargarAjustes();await pintar(preparar)}
 async function pintar(forzar){
   parar();
   const l=await api(`/api/libros/${S.actual}`);
@@ -341,7 +403,7 @@ async function pintar(forzar){
   volver();enlazar(l);if(document.getElementById("visor"))iniciarVisor(l);
 }
 function vPreparar(l){
-  const o=l.opciones||S.opciones[l.id]||{};
+  const previas=guardado("opciones")||{};const o={...previas,glosario:"",...(l.opciones||{})};if(l.opciones)o.glosario=l.opciones.glosario_libro??l.opciones.glosario??"";
   const elegido=o.motor||(S.motores.find(m=>m.listo&&!["prueba","libre"].includes(m.id))?.id)||"prueba";
   const op=(sel,auto)=>Object.entries(S.idiomas).filter(([k])=>auto||k!=="auto").map(([k,v])=>`<option value="${k}" ${k===sel?"selected":""}>${esc(v)}</option>`).join("");
   return`<div class="columnas"><section class="panel">
@@ -351,10 +413,12 @@ function vPreparar(l){
   <div class="etiqueta">Motor de traducción</div>
   <div class="motores">${S.motores.map(m=>`<label class="motor"><input type="radio" name="motor" value="${m.id}" ${m.id===elegido?"checked":""}><span><b>${esc(m.label)}</b><small>${esc(m.note)}</small></span>${m.listo?"":`<span class="ficha rubor">Falta clave</span>`}</label>`).join("")}</div>
   <details class="plegable" ${o.glosario?"open":""}><summary>Glosario${l.terminos?.length?` · ${l.terminos.length} sugerencias`:""}</summary><div class="interior"><label class="etiqueta" for="glosario" hidden>Glosario</label><textarea id="glosario" placeholder="Una entrada por línea:&#10;germ theory = teoría microbiana">${esc(o.glosario||"")}</textarea>${l.terminos?.length?`<div class="terminos">${l.terminos.map(t=>`<button type="button" data-termino="${esc(t.termino)}">${esc(t.termino)} · ${t.veces}</button>`).join("")}</div>`:""}</div></details>
+  <details class="plegable"><summary>Solo unas páginas, para probar sin gastar cuota</summary><div class="interior"><div class="campo" style="margin:0"><label for="paginas">${l.tipo==="epub"?"Secciones":"Páginas"}</label><input type="text" id="paginas" inputmode="numeric" placeholder="Ejemplo: 40-45, 50"><small>El resto queda en el idioma original. Luego podrás completarlo sin repetir gasto.</small></div></div></details>
+  ${l.salidas&&l.salidas.traducido?`<label class="casilla"><input type="checkbox" id="reusar" checked><span>Reutilizar lo ya traducido con este motor<small>Desmárcalo para traducir todo otra vez; gastará cuota.</small></span></label>`:""}
   <label class="casilla"><input type="checkbox" id="bilingue" ${o.bilingue?"checked":""}><span>Crear también una edición bilingüe<small>${l.tipo==="epub"?"Original y traducción, párrafo a párrafo.":"Página original y traducida, alternadas."}</small></span></label>
   <div id="error-inicio"></div>
   <div class="accion-fija"><button class="boton ancho" id="traducir" ${l.bloqueado?"disabled":""}>${["pausado","detenido","error"].includes(l.estado)?"Reanudar la traducción":"Traducir el libro"}</button></div>
-  </section><aside class="panel"><h2>Este libro</h2><button class="boton suave" id="ver-original" style="width:100%;margin-bottom:10px">Leer el original</button><div class="dato"><span>Formato</span><b>${esc(l.tipo.toUpperCase())}</b></div><div class="dato"><span>Texto</span><b>${num(l.caracteres)} caracteres</b></div><div id="estimacion" style="margin-top:12px"></div><button class="boton linea" id="borrar" style="margin-top:12px;width:100%">Quitar de la biblioteca</button></aside></div>`;
+  </section><aside class="panel"><h2>Este libro</h2><button class="boton suave" id="ver-original" style="width:100%;margin-bottom:10px">Leer el original</button><div class="dato"><span>Formato</span><b>${esc(l.tipo.toUpperCase())}</b></div><div class="dato"><span>Texto</span><b>${num(l.caracteres)} caracteres</b></div><div id="estimacion" style="margin-top:12px"></div><button class="boton linea" id="borrar" style="margin-top:12px;width:100%">Mover a la papelera</button></aside></div>`;
 }
 function estimar(l){
   const m=S.motores.find(x=>x.id===document.querySelector("[name=motor]:checked")?.value),c=document.getElementById("estimacion");if(!m||!c)return;
@@ -377,26 +441,30 @@ function listaFases(l){
   const fases=l.tipo==="epub"?FASES.filter(f=>!["maquetando","preparando"].includes(f[0])):l.escaneado?FASES:FASES.filter(f=>f[0]!=="preparando");const i=Math.max(0,fases.findIndex(f=>f[0]===(l.fase||"traduciendo")));
   return fases.map((f,n)=>`<li class="${n<i?"hecha":n===i?"activa":""}"><i>${n<i?"✓":n===i?"":n+1}</i><span>${esc(f[1])}</span></li>`).join("");
 }
+function notificar(l){try{if(l.estado==="terminado"){const a=l.calidad?.alta||0;tostada(`Traducción terminada${a?` · ${a} avisos importantes`:""}`);if(window.Notification&&Notification.permission==="granted"&&document.hidden)new Notification("Lumbre",{body:`«${l.titulo||l.archivo}» está listo`,icon:"/static/icono-192.png"})}}catch{}}
+function restante(l){const p=l.progreso||0;if(!l.empezado||p<3||p>=99)return"";const seg=Math.max(0,(Date.now()/1000-l.empezado)*(100-p)/p);if(seg<60)return" · queda menos de un minuto";const m=Math.round(seg/60);return m<60?` · quedan unos ${m} min`:` · quedan unas ${(m/60).toFixed(1).replace(".",",")} h`}
 function vProgreso(l){
-  return`<section class="panel progreso"><div class="cifra" id="cifra">${Math.floor(l.progreso||0)} %</div><div class="barra-p"><i id="bp" style="width:${l.progreso||0}%"></i></div><p id="dp" style="color:var(--suave)">${esc(detalleFase(l))}</p><ol class="fases" id="fases">${listaFases(l)}</ol><p style="color:var(--suave);font-size:14.5px;max-width:46ch;margin:0 auto 16px">Puedes cerrar la ventana: Lumbre seguirá trabajando y lo verás aquí al volver a abrirla.</p><button class="boton linea" id="detener">Detener</button></section>`;
+  return`<section class="panel progreso"><div class="cifra" id="cifra">${Math.floor(l.progreso||0)} %</div><div class="barra-p"><i id="bp" style="width:${l.progreso||0}%"></i></div><p id="dp" style="color:var(--suave)">${esc(detalleFase(l))}</p><ol class="fases" id="fases">${listaFases(l)}</ol><p style="color:var(--suave);font-size:14.5px;max-width:46ch;margin:0 auto 16px">Puedes cerrar la ventana: Lumbre seguirá trabajando, y el PC no se suspenderá hasta terminar.</p><button class="boton linea" id="detener">Detener</button></section>`;
 }
 async function pintarProgreso(){
   try{const l=await api(`/api/libros/${S.actual}`);
-    if(!ACTIVOS.includes(l.estado)){await pintar();return}
+    document.title=`${Math.floor(l.progreso||0)} % · Lumbre`;
+    if(!ACTIVOS.includes(l.estado)){document.title="Lumbre";notificar(l);await pintar();return}
     const c=document.getElementById("cifra");if(!c)return;
-    c.textContent=`${Math.floor(l.progreso||0)} %`;document.getElementById("bp").style.width=`${l.progreso||0}%`;document.getElementById("dp").textContent=detalleFase(l);document.getElementById("fases").innerHTML=listaFases(l);
+    c.textContent=`${Math.floor(l.progreso||0)} %`;document.getElementById("bp").style.width=`${l.progreso||0}%`;document.getElementById("dp").textContent=detalleFase(l)+restante(l);document.getElementById("fases").innerHTML=listaFases(l);
   }catch{}
   S.temp=setTimeout(pintarProgreso,1000);
 }
 const claudeListo=()=>S.motores.find(m=>m.id==="claude")?.listo;
 async function vResultado(l){
   const inf=await api(`/api/libros/${l.id}/informe`);
-  const q=l.calidad||{alta:0,media:0,baja:0};const pest=[["leer","Leer"],["descargas","Descargas"],["resumen","Resumen"],["preguntas","Preguntas"],["revision",`Calidad${q.alta+q.media?` · ${q.alta+q.media}`:""}`]];
+  const q=l.calidad||{alta:0,media:0,baja:0};const pest=[["leer","Leer"],["descargas","Descargas"],["resumen","Resumen"],["preguntas","Preguntas"],["corregir","Corregir"],["revision",`Calidad${q.alta+q.media?` · ${q.alta+q.media}`:""}`]];
   const motor=S.motores.find(m=>m.id===l.motor)?.label||l.motor;
   const flecha=`<svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><path d="M9 6h16a3 3 0 0 1 3 3v21H12a3 3 0 0 1-3-3V6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 27a3 3 0 0 1 3-3h16M18 12v7m0 0-3-3m3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const c={
-  leer:`<div id="visor"></div>`,
-  descargas:`${l.motor==="prueba"?`<div class="aviso mantequilla">Prueba de maquetación: el texto no está traducido de verdad.</div>`:""}${(l.avisos||[]).map(a=>`<div class="aviso mantequilla">${esc(a)}</div>`).join("")}<div class="descargas"><a class="descarga salvia" href="/api/libros/${l.id}/descargar/traducido">${flecha}<span><b>Libro traducido</b><small>${esc(l.tipo.toUpperCase())} con el formato original</small></span></a>${l.salidas.bilingue?`<a class="descarga cielo" href="/api/libros/${l.id}/descargar/bilingue">${flecha}<span><b>Edición bilingüe</b><small>Original y traducción</small></span></a>`:""}</div><div class="dato"><span>Motor</span><b>${esc(motor)}</b></div><div class="dato"><span>Enviados al motor</span><b>${num(l.enviados)} caracteres</b></div><div class="dato"><span>Reutilizados sin gastar cuota</span><b>${num(l.reutilizados)} caracteres</b></div><div class="dato"><span>Avisos de calidad</span><b>${num(l.avisos_calidad)}</b></div><div class="fila" style="margin-top:14px"><button class="boton linea" id="repetir">Traducir de nuevo</button><button class="boton linea" id="borrar">Quitar de la biblioteca</button></div>`,
+  leer:`${l.parcial?`<div class="aviso mantequilla fila" style="justify-content:space-between"><span>Traducción parcial: ${esc(l.parcial)}.</span><button class="boton suave" id="completar">Completar el libro</button></div>`:""}${l.cambios_pendientes?avisoPendientes():""}<div id="visor"></div>`,
+  corregir:`${l.cambios_pendientes?avisoPendientes():""}<div id="editor"></div>`,
+  descargas:`${l.motor==="prueba"?`<div class="aviso mantequilla">Prueba de maquetación: el texto no está traducido de verdad.</div>`:""}${(l.avisos||[]).map(a=>`<div class="aviso mantequilla">${esc(a)}</div>`).join("")}<div class="descargas"><a class="descarga salvia" href="/api/libros/${l.id}/descargar/traducido">${flecha}<span><b>Libro traducido</b><small>${esc(l.tipo.toUpperCase())} con el formato original</small></span></a>${l.salidas.bilingue?`<a class="descarga cielo" href="/api/libros/${l.id}/descargar/bilingue">${flecha}<span><b>Edición bilingüe</b><small>Original y traducción</small></span></a>`:""}</div><div class="dato"><span>Motor</span><b>${esc(motor)}</b></div><div class="dato"><span>Enviados al motor</span><b>${num(l.enviados)} caracteres</b></div><div class="dato"><span>Reutilizados sin gastar cuota</span><b>${num(l.reutilizados)} caracteres</b></div><div class="dato"><span>Avisos de calidad</span><b>${num(l.avisos_calidad)}</b></div><div class="etiqueta" style="margin-top:16px">Exportar el texto traducido</div><div class="fila" style="margin-top:8px"><a class="boton suave" href="/api/libros/${l.id}/exportar/epub">EPUB para leer</a><a class="boton suave" href="/api/libros/${l.id}/exportar/txt">TXT</a></div><div class="fila" style="margin-top:16px"><button class="boton linea" id="repetir">Retraducir el libro</button><button class="boton linea" id="borrar">Mover a la papelera</button></div>`,
   resumen:`<div class="campo" style="max-width:260px"><label for="nivel">Extensión</label><select id="nivel"><option value="breve">Breve · 5 ideas</option><option value="media" selected>Media · 10 ideas</option><option value="extensa">Extensa · 15 ideas</option></select></div><div class="fila" style="margin-bottom:14px"><button class="boton" id="res-claude" ${claudeListo()?"":"disabled"}>Resumir con Claude</button><button class="boton suave" id="res-frases">Frases clave, gratis</button></div>${claudeListo()?"":`<p class="vacio-t" style="margin-bottom:14px">El resumen redactado necesita una clave de la API de Claude en Ajustes. Las frases clave citan literalmente el libro.</p>`}<div id="sal-res"></div>`,
   preguntas:`<form class="pregunta" id="f-preg"><input type="text" id="pregunta" placeholder="¿Qué argumenta sobre…?" aria-label="Tu pregunta"><button class="boton">Buscar</button></form><div id="sal-preg"><p class="vacio-t">Encontrará los pasajes más relacionados.${claudeListo()?" Claude redactará una respuesta con referencias.":" Con una clave de Claude, también redactará una respuesta."}</p></div>`,
   revision:vCalidad(l,inf)
@@ -404,6 +472,31 @@ async function vResultado(l){
   return`<div class="pestanas-libro" role="tablist">${pest.map(([k,t])=>`<button role="tab" data-p="${k}" aria-selected="${k===S.pestana}">${esc(t)}</button>`).join("")}</div><section class="panel">${c}</section>`;
 }
 const GRAV={alta:["Revisar seguro","rubor"],media:["Conviene mirar","mantequilla"],baja:["Menor","cielo"]};
+function avisoPendientes(){return`<div class="aviso mantequilla fila" style="justify-content:space-between"><span>Hay correcciones sin aplicar al libro.</span><button class="boton" data-aplicar>Aplicar al libro</button></div>`}
+async function iniciarEditor(l){
+  const c=document.getElementById("editor");if(!c)return;
+  const E={q:"",pagina:0,desde:0,limite:30};
+  c.innerHTML=`<div class="herramientas"><input type="search" id="e-q" placeholder="Buscar en original o traducción" aria-label="Buscar párrafos">${l.tipo==="pdf"?`<input type="number" id="e-p" min="1" max="${l.unidades}" placeholder="Página" aria-label="Página" style="flex:0 1 110px">`:""}</div>
+  <details class="plegable"><summary>Buscar y reemplazar en todo el libro</summary><div class="interior"><div class="dos"><div class="campo"><label for="r-a">Buscar</label><input type="text" id="r-a" style="background:var(--papel)"></div><div class="campo"><label for="r-b">Cambiar por</label><input type="text" id="r-b" style="background:var(--papel)"></div></div><button type="button" class="boton suave" id="r-ir">Reemplazar</button><div class="resultado" id="r-res"></div></div></details>
+  <p class="vacio-t" style="margin-bottom:6px">Las marcas ⟦ ⟧ guardan cursivas, enlaces y notas: déjalas en el texto. Los cambios llegan al libro al pulsar «Aplicar al libro».</p><div id="e-lista"></div><div class="fila" style="justify-content:center;margin-top:12px"><button class="boton suave" id="e-ant">Anteriores</button><span class="vacio-t" id="e-pos"></span><button class="boton suave" id="e-sig">Siguientes</button></div>`;
+  const cargar=async()=>{
+    const u=new URLSearchParams({q:E.q,pagina:E.pagina,desde:E.desde,limite:E.limite});const d=await api(`/api/libros/${l.id}/segmentos?${u}`);const lista=document.getElementById("e-lista");
+    if(!d.total){lista.innerHTML=`<p class="vacio-t" style="margin-block:14px">${E.q||E.pagina?"No hay párrafos con ese filtro.":"Retraduce el libro con esta versión para poder corregirlo. Lo ya traducido no vuelve a gastar cuota."}</p>`}
+    else lista.innerHTML=d.segmentos.map(x=>`<div class="segmento-ed" data-seg="${x.id}"><div><small>${esc(x.lugar)}${x.tipo&&x.tipo!=="parrafo"?` · ${esc(x.tipo)}`:""}</small><div class="orig">${esc(x.original)}</div></div><div><small>Traducción${x.editado?" · corregida":""}</small><textarea aria-label="Traducción">${esc(x.traduccion)}</textarea><div class="fila" style="margin-top:6px"><button class="boton suave" data-guardar>Guardar</button><button class="boton linea" data-retraducir>Retraducir</button></div><div class="resultado"></div></div></div>`).join("");
+    document.getElementById("e-pos").textContent=d.total?`${E.desde+1}–${Math.min(E.desde+E.limite,d.total)} de ${num(d.total)}`:"";
+    document.getElementById("e-ant").disabled=E.desde<=0;document.getElementById("e-sig").disabled=E.desde+E.limite>=d.total;
+    lista.querySelectorAll("[data-seg]").forEach(f=>{const id=f.dataset.seg,t=f.querySelector("textarea"),r=f.querySelector(".resultado");
+      f.querySelector("[data-guardar]").onclick=async()=>{try{const x=await api(`/api/libros/${l.id}/segmentos/${id}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({traduccion:t.value})});t.value=x.traduccion;r.textContent=x.avisos.length?`Guardado. Aviso: ${x.avisos[0].mensaje}`:"Guardado.";marcarPendiente(l)}catch(e){r.textContent=e.message}};
+      f.querySelector("[data-retraducir]").onclick=async e=>{e.target.disabled=true;r.textContent="Traduciendo…";try{const x=await post(`/api/libros/${l.id}/segmentos/${id}/retraducir`,{});t.value=x.traduccion;r.textContent="Nueva traducción guardada.";marcarPendiente(l)}catch(err){r.textContent=err.message}e.target.disabled=false}});
+  };
+  let espera;document.getElementById("e-q").oninput=e=>{clearTimeout(espera);espera=setTimeout(()=>{E.q=e.target.value;E.desde=0;cargar()},280)};
+  const ep=document.getElementById("e-p");if(ep)ep.onchange=()=>{E.pagina=parseInt(ep.value)||0;E.desde=0;cargar()};
+  document.getElementById("e-ant").onclick=()=>{E.desde=Math.max(0,E.desde-E.limite);cargar();scrollTo(0,0)};document.getElementById("e-sig").onclick=()=>{E.desde+=E.limite;cargar();scrollTo(0,0)};
+  document.getElementById("r-ir").onclick=async()=>{const a=document.getElementById("r-a").value,b=document.getElementById("r-b").value,r=document.getElementById("r-res");try{const q=await post(`/api/libros/${l.id}/reemplazar`,{buscar:a,cambiar:b,simular:true});if(!q.coincidencias){r.textContent="No hay coincidencias.";return}const ok=await pregunta({titulo:"¿Reemplazar?",aceptar:"Reemplazar",cuerpo:`<p>${num(q.coincidencias)} coincidencias de «${esc(a)}» pasarán a «${esc(b)}».</p>`});if(!ok)return;const x=await post(`/api/libros/${l.id}/reemplazar`,{buscar:a,cambiar:b});r.textContent=`Cambiados ${num(x.parrafos)} párrafos.`;marcarPendiente(l);cargar()}catch(e){r.textContent=e.message}};
+  cargar();
+}
+function marcarPendiente(l){if(!l.cambios_pendientes){l.cambios_pendientes=true;const c=document.getElementById("editor");c.insertAdjacentHTML("beforebegin",avisoPendientes());enlazarAplicar(l)}}
+function enlazarAplicar(l){document.querySelectorAll("[data-aplicar]").forEach(b=>b.onclick=async()=>{b.disabled=true;const o=l.opciones||{};try{await post(`/api/libros/${l.id}/traducir`,{...o,reconstruir:true,sin_memoria:false});S.pestana="leer";await pintar()}catch(e){tostada(e.message);b.disabled=false}})}
 function vCalidad(l,inf){
   S.filtroC=S.filtroC||"todos";
   if(!inf.length)return`<div class="aviso salvia" style="margin:0">Las comprobaciones de texto y maquetación no han encontrado nada. Conviene leer un capítulo de muestra: no valoran el estilo.</div>`;
@@ -418,7 +511,7 @@ async function iniciarVisor(l,paginaInicial){
   const c=document.getElementById("visor");if(!c)return;c.innerHTML=`<p class="vacio-t">Abriendo…</p>`;
   let info;try{info=await api(`/api/libros/${l.id}/visor`)}catch(e){c.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`;return}
   const docs=info.documentos,hay=d=>!!docs[d];
-  const V={doc:hay("traducido")?(innerWidth<760?"traducido":"comparar"):"original",n:paginaInicial||S.visorPagina?.[l.id]||1,ancho:Math.min(1200,Math.max(600,innerWidth>900?900:700)),esc:1};
+  const V={doc:hay("traducido")?(innerWidth<760?"traducido":"comparar"):"original",n:paginaInicial||S.visorPagina?.[l.id]||guardado("pagina."+l.id)||1,ancho:Math.min(1200,Math.max(600,innerWidth>900?900:700)),esc:1};
   const total=()=>(docs.traducido||docs.original).paginas;
   const hoja=(d,titulo)=>{
     if(info.tipo==="pdf")return`<div class="hoja">${titulo?`<small>${esc(titulo)}</small>`:""}<img alt="${esc(titulo||"Página")} ${V.n}" src="/api/libros/${l.id}/pagina/${d}/${V.n}.jpg?ancho=${V.ancho}"></div>`;
@@ -426,7 +519,7 @@ async function iniciarVisor(l,paginaInicial){
     return`<div class="hoja">${titulo?`<small>${esc(titulo)}</small>`:""}<iframe title="${esc(titulo||"Libro")}" sandbox="allow-same-origin" src="/api/libros/${l.id}/epub/${d}/${ruta}"></iframe></div>`;
   };
   const pintarV=()=>{
-    S.visorPagina={...(S.visorPagina||{}),[l.id]:V.n};
+    S.visorPagina={...(S.visorPagina||{}),[l.id]:V.n};guardado("pagina."+l.id,V.n);parar_voz();
     const comparar=V.doc==="comparar";
     const area=comparar?hoja("original","Original")+hoja("traducido","Traducción"):hoja(V.doc);
     document.getElementById("v-hojas").className=`visor-paginas ${comparar?"dos":"una"}`;
@@ -440,32 +533,36 @@ async function iniciarVisor(l,paginaInicial){
   c.innerHTML=`<div class="visor-barra"><div class="segmento">${opciones.map(([k,t])=>`<button data-vdoc="${k}">${t}</button>`).join("")}</div>
   <div class="grupo"><button class="icono" id="v-ant" aria-label="Anterior">‹</button><label><span hidden>Página</span><input type="number" id="v-n" min="1" max="${total()}"></label><span class="vacio-t">de ${num(total())}</span><button class="icono" id="v-sig" aria-label="Siguiente">›</button></div>
   ${info.tipo==="pdf"?`<div class="grupo"><button class="icono" id="v-menos" aria-label="Reducir">−</button><button class="icono" id="v-mas" aria-label="Ampliar">+</button></div>`:""}
-  <form class="grupo" id="v-buscar" style="flex:1;min-width:190px"><input type="text" id="v-q" placeholder="Buscar en el libro" aria-label="Buscar en el libro"></form></div><div class="resultados" id="v-res" hidden></div><div id="v-hojas"></div>`;
+  ${window.speechSynthesis?`<button class="boton suave" id="v-voz" style="min-height:40px">Escuchar</button>`:""}<form class="grupo" id="v-buscar" style="flex:1;min-width:190px"><input type="text" id="v-q" placeholder="Buscar en el libro" aria-label="Buscar en el libro"></form></div><div class="resultados" id="v-res" hidden></div><div id="v-hojas"></div>`;
   const ir=n=>{V.n=Math.min(total(),Math.max(1,n));pintarV()};
   document.getElementById("v-ant").onclick=()=>ir(V.n-1);document.getElementById("v-sig").onclick=()=>ir(V.n+1);
   document.getElementById("v-n").onchange=e=>ir(parseInt(e.target.value)||1);
   c.querySelectorAll("[data-vdoc]").forEach(b=>b.onclick=()=>{V.doc=b.dataset.vdoc;if(V.doc==="bilingue"||V.doc==="original"||V.doc==="traducido"){}pintarV()});
   const mas=document.getElementById("v-mas");if(mas){mas.onclick=()=>{V.esc=Math.min(2.4,V.esc+.2);V.ancho=V.esc>1.3?1600:1200;pintarV()};document.getElementById("v-menos").onclick=()=>{V.esc=Math.max(.5,V.esc-.2);pintarV()}}
   document.getElementById("v-buscar").onsubmit=async e=>{e.preventDefault();const q=document.getElementById("v-q").value.trim(),r=document.getElementById("v-res");if(q.length<2){r.hidden=true;return}const d=await api(`/api/libros/${l.id}/buscar?q=${encodeURIComponent(q)}`);r.hidden=false;r.innerHTML=d.length?d.map(x=>`<button data-ir-pag="${(/página (\d+)/.exec(x.lugar)||[])[1]||""}" data-seccion="${esc(x.lugar)}"><b>${esc(x.lugar)}</b> · ${esc(x.texto)}</button>`).join(""):`<p class="vacio-t">Sin resultados.</p>`;r.querySelectorAll("[data-ir-pag]").forEach(b=>b.onclick=()=>{if(b.dataset.irPag)ir(+b.dataset.irPag);else if(info.tipo==="epub"){const i=(docs.traducido||docs.original).secciones.findIndex(x=>x.includes(b.dataset.seccion));if(i>=0)ir(i+1)}})};
+  const vz=document.getElementById("v-voz");if(vz)vz.onclick=async()=>{if(speechSynthesis.speaking){parar_voz();return}const d=V.doc==="comparar"?"traducido":V.doc;try{const x=await api(`/api/libros/${l.id}/texto/${d}/${V.n}`);const u=new SpeechSynthesisUtterance(x.texto.replace(/-\n/g,"").replace(/\s+/g," "));u.lang=d==="original"?(l.idioma||"en"):(l.destino||"es");u.onend=()=>{vz.textContent="Escuchar"};speechSynthesis.speak(u);vz.textContent="Parar"}catch(e){tostada(e.message)}};
   S.teclado=e=>{if(!document.getElementById("v-hojas")||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key==="ArrowRight")ir(V.n+1);if(e.key==="ArrowLeft")ir(V.n-1)};
   pintarV();
 }
+function parar_voz(){try{if(window.speechSynthesis)speechSynthesis.cancel();const v=document.getElementById("v-voz");if(v)v.textContent="Escuchar"}catch{}}
 addEventListener("keydown",e=>S.teclado&&S.teclado(e));
 function md(t){const li=esc(t).split(/\n/);let h="",l=null;const fin=()=>{if(l){h+=`</${l}>`;l=null}},f=s=>s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\*(.+?)\*/g,"<i>$1</i>");for(const x of li){let m;if(m=x.match(/^#{1,4}\s+(.*)/)){fin();h+=`<h3>${f(m[1])}</h3>`}else if(m=x.match(/^\s*[-*]\s+(.*)/)){if(l!=="ul"){fin();h+="<ul>";l="ul"}h+=`<li>${f(m[1])}</li>`}else if(m=x.match(/^\s*\d+[.)]\s+(.*)/)){if(l!=="ol"){fin();h+="<ol>";l="ol"}h+=`<li>${f(m[1])}</li>`}else if(x.trim()){fin();h+=`<p>${f(x)}</p>`}else fin()}fin();return h}
 function enlazar(l){
   document.querySelectorAll("[name=motor]").forEach(r=>r.onchange=()=>estimar(l));estimar(l);
   document.querySelectorAll("[data-termino]").forEach(b=>b.onclick=()=>{const g=document.getElementById("glosario");g.value=(g.value.trim()?g.value.trim()+"\n":"")+b.dataset.termino+" = ";g.focus();b.remove()});
   const t=document.getElementById("traducir");
-  if(t)t.onclick=async()=>{const c={motor:document.querySelector("[name=motor]:checked")?.value,origen:document.getElementById("origen").value,destino:document.getElementById("destino").value,glosario:document.getElementById("glosario").value,bilingue:document.getElementById("bilingue").checked};const err=document.getElementById("error-inicio");
+  if(t)t.onclick=async()=>{const reusar=document.getElementById("reusar");const c={motor:document.querySelector("[name=motor]:checked")?.value,origen:document.getElementById("origen").value,destino:document.getElementById("destino").value,glosario:document.getElementById("glosario").value,bilingue:document.getElementById("bilingue").checked,paginas:document.getElementById("paginas").value,sin_memoria:reusar?!reusar.checked:false};guardado("opciones",{motor:c.motor,origen:c.origen,destino:c.destino,bilingue:c.bilingue});if(window.Notification&&Notification.permission==="default")Notification.requestPermission().catch(()=>{});const err=document.getElementById("error-inicio");
     if(c.origen===c.destino){err.innerHTML=`<div class="aviso rubor">El idioma del libro y el de destino son el mismo.</div>`;return}
     t.disabled=true;try{await post(`/api/libros/${l.id}/traducir`,c);await pintar()}catch(e){t.disabled=false;err.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}};
   const d=document.getElementById("detener");if(d)d.onclick=async()=>{d.disabled=true;d.textContent="Deteniendo…";await post(`/api/libros/${l.id}/detener`,{})};
   document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{S.pestana=b.dataset.p;pintar()});
+  enlazarAplicar(l);iniciarEditor(l);
+  const co=document.getElementById("completar");if(co)co.onclick=async()=>{co.disabled=true;try{await post(`/api/libros/${l.id}/traducir`,{...(l.opciones||{}),glosario:l.opciones?.glosario_libro??"",paginas:"",sin_memoria:false});await pintar()}catch(e){tostada(e.message);co.disabled=false}};
   document.querySelectorAll("[data-filtro]").forEach(b=>b.onclick=()=>{S.filtroC=b.dataset.filtro;pintar()});
   document.querySelectorAll("[data-ver]").forEach(b=>b.onclick=()=>{S.visorPagina={...(S.visorPagina||{}),[l.id]:+b.dataset.ver};S.pestana="leer";pintar()});
   const vo=document.getElementById("ver-original");if(vo)vo.onclick=()=>{const panel=vo.closest(".columnas");panel.outerHTML=`<div class="fila" style="margin-bottom:10px"><button class="boton suave" id="prep-volver">Volver a preparar</button></div><div id="visor"></div>`;document.getElementById("prep-volver").onclick=()=>pintar();iniciarVisor(l)};
   const rep=document.getElementById("repetir");if(rep)rep.onclick=()=>pintar(true);
-  const bo=document.getElementById("borrar");if(bo)bo.onclick=async()=>{if(bo.dataset.ok){await api(`/api/libros/${l.id}`,{method:"DELETE"});biblioteca()}else{bo.dataset.ok="1";bo.textContent="Pulsa otra vez para confirmar"}};
+  const bo=document.getElementById("borrar");if(bo)bo.onclick=()=>borrarLibro(l);
   const rc=document.getElementById("res-claude"),rf=document.getElementById("res-frases");
   const res=async(metodo,b)=>{const s=document.getElementById("sal-res");b.disabled=true;s.innerHTML=`<p class="vacio-t">${metodo==="claude"?"Claude está leyendo el libro; puede tardar unos minutos…":"Buscando las frases más representativas…"}</p>`;
     try{const r=await post(`/api/libros/${l.id}/resumen`,{metodo,nivel:document.getElementById("nivel").value});s.innerHTML=r.metodo==="claude"?`<div class="markdown">${md(r.markdown)}</div>`:(r.frases.length?`<div class="aviso cielo">Frases literales del libro. No es un resumen redactado.</div><ol class="lista-ideas">${r.frases.map(x=>`<li><span>${esc(x.texto)}<small>${esc(x.lugar)}</small></span></li>`).join("")}</ol>`:`<div class="aviso mantequilla">No se han encontrado frases adecuadas.</div>`)}catch(e){s.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}b.disabled=false};
@@ -485,9 +582,17 @@ async function ajustes(){
   ${bloque("libre","LibreTranslate","Sin cuota. Requiere tenerlo en marcha en vuestro equipo.",`<div class="fila-clave"><input type="text" id="libre_url" aria-label="Dirección de LibreTranslate" value="${esc(a.libre_url)}"><button type="button" class="boton suave" data-probar="libre">Probar</button></div>`)}
   ${bloque("claude","API de Claude (opcional)","Para resúmenes redactados y respuestas. Se paga por uso, aparte de la suscripción.",clave("claude_key",a.claude_key,"Clave de la API de Claude","claude"))}
   <div style="margin-top:14px"><button class="boton" id="guardar">Guardar cambios</button></div></section>
+  <section class="panel"><h2>Glosario general</h2><p class="vacio-t" style="margin-bottom:10px">Se aplica a todos los libros nuevos. Una entrada por línea.</p><textarea id="glosario_general" aria-label="Glosario general" placeholder="germ theory = teoría microbiana">${esc(a.glosario_general||"")}</textarea><div style="margin-top:10px"><button class="boton" id="guardar-g">Guardar glosario</button></div></section>
+  <section class="panel"><h2>Apariencia</h2><div class="segmento" style="width:fit-content">${[["sistema","Sistema"],["light","Claro"],["dark","Oscuro"]].map(([k,t])=>`<button data-tema="${k}" aria-pressed="${(guardado("tema")||"sistema")===k}">${t}</button>`).join("")}</div></section>
+  <section class="panel"><h2>Datos</h2><div id="almacen"></div><div class="fila" style="margin-top:12px"><button class="boton suave" id="abrir-datos">Abrir carpeta de datos</button><button class="boton linea" id="vaciar" hidden>Vaciar papelera</button></div><div id="papelera" style="margin-top:10px"></div></section>
   <section class="panel"><h2>Actualizar Lumbre</h2><p style="margin-bottom:12px">Tienes la versión <b>${esc(S.version)}</b>. La app se renueva sola en unos segundos, sin reinstalar ni perder nada.</p><div id="res-act"></div><div class="fila"><button class="boton" id="buscar-act">Buscar actualizaciones</button><button class="boton suave" id="act">Instalar desde archivo</button></div></section>`;
   document.getElementById("volver-a").onclick=biblioteca;
   const recoger=()=>{const c={azure_region:document.getElementById("azure_region").value,libre_url:document.getElementById("libre_url").value};for(const k of["azure_key","deepl_key","claude_key"]){const v=document.getElementById(k).value.trim();if(v)c[k]=v}return c};
+  document.getElementById("guardar-g").onclick=async()=>{await post("/api/ajustes",{glosario_general:document.getElementById("glosario_general").value});tostada("Glosario guardado")};
+  document.querySelectorAll("[data-tema]").forEach(b=>b.onclick=()=>{guardado("tema",b.dataset.tema);aplicarTema(b.dataset.tema);document.querySelectorAll("[data-tema]").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  document.getElementById("abrir-datos").onclick=()=>post("/api/almacenamiento/abrir",{}).catch(e=>tostada(e.message));
+  const datos=async()=>{const[al,pa]=await Promise.all([api("/api/almacenamiento"),api("/api/papelera")]);document.getElementById("almacen").innerHTML=`<div class="dato"><span>Libros</span><b>${bytes(al.libros)}</b></div><div class="dato"><span>Memoria de traducciones</span><b>${bytes(al.memoria)}</b></div><div class="dato"><span>Papelera</span><b>${bytes(al.papelera)}</b></div>`;const v=document.getElementById("vaciar");v.hidden=!pa.length;document.getElementById("papelera").innerHTML=pa.map(x=>`<div class="dato"><span>${esc(x.titulo)}</span><button class="boton suave" style="min-height:34px;padding:3px 13px" data-rest="${x.id}">Restaurar</button></div>`).join("");document.querySelectorAll("[data-rest]").forEach(b=>b.onclick=async()=>{await post(`/api/libros/${b.dataset.rest}/restaurar`,{});tostada("Libro restaurado");datos()})};datos();
+  document.getElementById("vaciar").onclick=async()=>{const ok=await pregunta({titulo:"¿Vaciar la papelera?",aceptar:"Vaciar",peligro:true,cuerpo:"<p>Los libros se borrarán para siempre. La memoria de traducciones se conserva.</p>"});if(ok){await api("/api/papelera",{method:"DELETE"});datos()}};
   document.getElementById("guardar").onclick=async()=>{await post("/api/ajustes",recoger());tostada("Ajustes guardados");ajustes()};
   document.querySelectorAll("[data-probar]").forEach(b=>b.onclick=async()=>{const id=b.dataset.probar,s=document.getElementById(`pr-${id}`);s.textContent="Probando…";await post("/api/ajustes",recoger());const r=await post(`/api/motores/${id}/probar`,{});s.textContent=r.ok?`Funciona: «${r.muestra}»${r.restante!=null?` · quedan ${num(r.restante)} caracteres este mes`:""}`:r.mensaje});
   document.getElementById("act").onclick=()=>document.getElementById("selector-act").click();

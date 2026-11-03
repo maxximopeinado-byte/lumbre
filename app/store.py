@@ -33,6 +33,7 @@ DEFAULT_CONFIG = {
     "claude_key": "",
     "claude_model": "claude-sonnet-5-5",
     "claude_summary_model": "claude-haiku-5-5",
+    "glosario_general": "",
 }
 SECRET_FIELDS = ("deepl_key", "azure_key", "libre_key", "claude_key")
 

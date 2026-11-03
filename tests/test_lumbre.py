@@ -461,3 +461,106 @@ def test_scanned_book_layout_has_no_overlaps(env):
     pdf_ocr.translate(opened, env / "t.pdf", tr, "es")
     assert not calidad.verify_pdf(env / "t.pdf")
     assert fitz.open(env / "t.pdf")[0].get_images() == []
+
+
+def _translated_job(api, env, name="q.epub", maker=make_epub, **options):
+    source = maker(env / name)
+    with source.open("rb") as handle:
+        job = api.post("/api/libros", files={"file": (name, handle)}).json()
+    body = {"motor": "prueba", "origen": "en", "destino": "es", **options}
+    assert api.post(f"/api/libros/{job['id']}/traducir", json=body).status_code == 200
+    done = wait_done(api, job["id"])
+    assert done["estado"] == "terminado", done
+    return done
+
+
+def test_trash_restore_rename_and_duplicates(env):
+    api = client(env)
+    job = _translated_job(api, env)
+    with (env / "q.epub").open("rb") as handle:
+        again = api.post("/api/libros", files={"file": ("copia.epub", handle)}).json()
+    assert again["duplicado"] and again["id"] == job["id"]
+    assert api.post(f"/api/libros/{job['id']}/datos", json={"titulo": "Otro título", "autor": "A"}).json()["titulo"] == "Otro título"
+    assert api.post(f"/api/libros/{job['id']}/datos", json={"titulo": "  "}).status_code == 400
+    assert api.delete(f"/api/libros/{job['id']}").status_code == 200
+    assert api.get("/api/libros").json() == []
+    assert api.get("/api/papelera").json()[0]["titulo"] == "Otro título"
+    assert api.post(f"/api/libros/{job['id']}/restaurar").json()["id"] == job["id"]
+    assert api.get("/api/libros").json()[0]["id"] == job["id"]
+    assert api.post(f"/api/libros/{job['id']}/restaurar").status_code == 404
+    api.delete(f"/api/libros/{job['id']}")
+    assert api.delete("/api/papelera").status_code == 200 and api.get("/api/papelera").json() == []
+
+
+def test_correct_replace_and_rebuild_without_spending(env):
+    api = client(env)
+    job = _translated_job(api, env)
+    data = api.get(f"/api/libros/{job['id']}/segmentos", params={"q": "Figure 1"}).json()
+    assert data["total"] == 1
+    segment = data["segmentos"][0]
+    saved = api.put(f"/api/libros/{job['id']}/segmentos/{segment['id']}", json={"traduccion": "Figura uno corregida. La voluntad general."})
+    assert saved.status_code == 200
+    with_marks = next(s for s in api.get(f"/api/libros/{job['id']}/segmentos", params={"limite": 100}).json()["segmentos"] if "⟦" in s["traduccion"])
+    assert api.put(f"/api/libros/{job['id']}/segmentos/{with_marks['id']}", json={"traduccion": "Sin marcas"}).status_code == 400
+    assert api.post(f"/api/libros/{job['id']}/reemplazar", json={"buscar": "voluntad general", "simular": True}).json()["coincidencias"] >= 1
+    assert api.post(f"/api/libros/{job['id']}/reemplazar", json={"buscar": "voluntad general", "cambiar": "voluntad común"}).json()["parrafos"] >= 1
+    assert api.get(f"/api/libros/{job['id']}").json()["cambios_pendientes"]
+    assert api.post(f"/api/libros/{job['id']}/segmentos/{segment['id']}/retraducir").status_code == 200
+    api.put(f"/api/libros/{job['id']}/segmentos/{segment['id']}", json={"traduccion": "Figura uno & corregida."})
+    options = api.get(f"/api/libros/{job['id']}").json()["opciones"]
+    api.post(f"/api/libros/{job['id']}/traducir", json={**options, "reconstruir": True})
+    rebuilt = wait_done(api, job["id"])
+    assert rebuilt["enviados"] == 0 and not rebuilt["cambios_pendientes"]
+    assert "Figura uno &amp; corregida." in zipfile.ZipFile(store_file(env, job["id"], "traducido.epub")).read("OEBPS/cap1.xhtml").decode()
+
+
+def store_file(env, job_id, name):
+    return env / "trabajos" / job_id / name
+
+
+def test_partial_translation_then_complete(env):
+    api = client(env)
+    job = _translated_job(api, env, "p.pdf", make_pdf, paginas="2")
+    assert job["parcial"] == "2" and job["enviados"] > 0
+    first = fitz.open(store_file(env, job["id"], "traducido.pdf"))
+    assert "Questiona" not in first[0].get_text() and "Questiona" in first[1].get_text()
+    bad = api.post(f"/api/libros/{job['id']}/traducir", json={"motor": "prueba", "origen": "en", "destino": "es", "paginas": "x"})
+    assert bad.status_code == 400
+    options = {k: v for k, v in job["opciones"].items() if k != "paginas"}
+    api.post(f"/api/libros/{job['id']}/traducir", json=options)
+    complete = wait_done(api, job["id"])
+    assert complete["parcial"] == "" and complete["reutilizados"] > 0
+    assert "Questiona" in fitz.open(store_file(env, job["id"], "traducido.pdf"))[0].get_text()
+
+
+def test_fresh_retranslation_ignores_memory_and_general_glossary(env):
+    api = client(env)
+    job = _translated_job(api, env)
+    assert job["enviados"] > 0
+    options = job["opciones"]
+    api.post(f"/api/libros/{job['id']}/traducir", json=options)
+    assert wait_done(api, job["id"])["enviados"] == 0
+    api.post(f"/api/libros/{job['id']}/traducir", json={**options, "sin_memoria": True})
+    assert wait_done(api, job["id"])["enviados"] > 0
+    api.post("/api/ajustes", json={"glosario_general": "general will = voluntad general"})
+    api.post(f"/api/libros/{job['id']}/traducir", json=options)
+    done = wait_done(api, job["id"])
+    assert "general will = voluntad general" in done["opciones"]["glosario"] and done["opciones"]["glosario_libro"] == ""
+    assert "voluntad general" in zipfile.ZipFile(store_file(env, job["id"], "traducido.epub")).read("OEBPS/cap1.xhtml").decode()
+
+
+def test_export_viewer_text_and_storage(env):
+    api = client(env)
+    job = _translated_job(api, env)
+    text = api.get(f"/api/libros/{job['id']}/exportar/txt")
+    assert text.status_code == 200 and "attachment" in text.headers["content-disposition"] and len(text.text) > 200
+    epub = api.get(f"/api/libros/{job['id']}/exportar/epub")
+    target = env / "e.epub"
+    target.write_bytes(epub.content)
+    names = zipfile.ZipFile(target).namelist()
+    assert names[0] == "mimetype" and "OEBPS/nav.xhtml" in names
+    from app import epub_tr
+    assert epub_tr.analyze(target)["caracteres"] > 200
+    assert api.get(f"/api/libros/{job['id']}/exportar/doc").status_code == 404
+    assert len(api.get(f"/api/libros/{job['id']}/texto/traducido/1").json()["texto"]) > 20
+    assert api.get("/api/almacenamiento").json()["libros"] > 0

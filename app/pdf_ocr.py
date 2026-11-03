@@ -426,11 +426,14 @@ def _figures(page_obj: fitz.Page, page: PageModel, m: Metrics) -> None:
         previous = y
 
 
-def build_model(document: fitz.Document, figures: bool = True, on_step=None) -> tuple[list[PageModel], Metrics]:
+def build_model(document: fitz.Document, figures: bool = True, on_step=None, only: set[int] | None = None) -> tuple[list[PageModel], Metrics]:
     pages = [PageModel(i, fitz.Rect(p.rect), _lines(p)) for i, p in enumerate(document)]
     metrics = _metrics(pages)
     for index, (model, page) in enumerate(zip(pages, document)):
         _analyze_page(model, metrics)
+        if only is not None and index + 1 not in only:
+            model.keep = model.keep or "fuera"
+            continue
         if figures and model.keep != "vacía":
             if on_step:
                 on_step(index + 1, len(pages))
@@ -445,7 +448,7 @@ def build_model(document: fitz.Document, figures: bool = True, on_step=None) -> 
 
 
 def _mark_continuations(pages: list[PageModel]) -> None:
-    usable = [p for p in pages if p.blocks and not p.keep]
+    usable = [p for p in pages if p.blocks and p.keep not in ("vacía", "ruido", "figura")]
     for current, following in zip(usable, usable[1:]):
         if following.number != current.number + 1:
             continue
@@ -599,12 +602,17 @@ def _layout_page(model: PageModel, m: Metrics, composer: Composer, scale: float)
 
 
 def translate(document: fitz.Document, output, translator: Translator, language: str) -> dict:
-    pages, metrics = build_model(document, on_step=lambda done, total: translator.on_stage("preparando", done, total))
+    pages, metrics = build_model(document, on_step=lambda done, total: translator.on_stage("preparando", done, total), only=translator.pages)
     items: list[Item] = []
     groups: list[list[Block]] = []
     for model in pages:
+        if model.keep and model.keep != "fuera":
+            continue
         for block in model.blocks:
             if block.continued:
+                continue
+            # Una frase que empieza fuera del rango y sigue dentro también se traduce.
+            if model.keep == "fuera" and not (block.joins_next and translator.pages and model.number + 2 in translator.pages):
                 continue
             group = [block]
             if block.joins_next:
@@ -623,10 +631,10 @@ def translate(document: fitz.Document, output, translator: Translator, language:
                 source = _join([Line(0, 0, 0, 0, b.text) for b in group])
             if not WORD.search(source):
                 continue
-            block.item = Item(fragment=html.escape(source, quote=False), where=f"página {model.number + 1}")
+            block.item = Item(fragment=html.escape(source, quote=False), where=f"página {model.number + 1}", kind=block.kind)
             items.append(block.item)
             groups.append(group)
-    toc = document.get_toc(simple=False)
+    toc = document.get_toc(simple=False) if translator.pages is None else []
     toc_items = [Item(fragment=html.escape(entry[1], quote=False), where="índice") for entry in toc if WORD.search(entry[1])]
     translator.run(items + toc_items)
 
@@ -757,6 +765,7 @@ def translate(document: fitz.Document, output, translator: Translator, language:
     translator.on_stage("guardando", 0, 1)
     document.save(output, garbage=4, deflate=True)
     kept = [m.number + 1 for m in pages if m.keep in ("ruido", "figura")]
+    translator.segments.sort(key=lambda s: int(re.search(r"\d+", s["lugar"]).group()) if re.search(r"\d+", s["lugar"]) else 10 ** 6)
     return {"no_caben": not_fitting, "reducidos": reduced, "paginas_conservadas": kept, "cuerpo": round(metrics.size * uniform, 1), "metodo": "escaneado"}
 
 

@@ -3,14 +3,18 @@ from __future__ import annotations
 
 import asyncio
 import csv
+import hashlib
 import io
 import json
+import os
 import re
 import shutil
 import threading
 import time
 import traceback
+import html
 import uuid
+from urllib.parse import quote
 import zipfile
 from pathlib import Path
 
@@ -18,7 +22,7 @@ from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import __version__, calidad, epub_tr, migrate, pdf_tr, store, tools, updates
+from . import __version__, calidad, edicion, epub_tr, migrate, pdf_tr, store, tools, updates
 from .engines import ENGINE_INFO, LANGUAGES, EngineError, build_engine
 from .pipeline import Cancelled, Translator, parse_glossary
 
@@ -65,6 +69,28 @@ async def only_this_computer(request: Request, call_next):
     return await call_next(request)
 
 
+TRASH_DAYS = 30
+
+
+def trash_dir() -> Path:
+    return store.DATA / "papelera"
+
+
+def _keep_awake(active: bool) -> None:
+    """Evita que Windows suspenda el equipo durante una traducción larga."""
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000001 if active else 0x80000000)
+    except (AttributeError, OSError):
+        pass
+
+
+def _size(path: Path) -> int:
+    return sum(item.stat().st_size for item in path.rglob("*") if item.is_file()) if path.exists() else 0
+
+
 def job_dir(job_id: str) -> Path:
     if not re.fullmatch(r"[0-9a-f]{32}", job_id):
         raise HTTPException(404, "No existe ese libro.")
@@ -93,6 +119,11 @@ def write_job(job_id: str, **changes) -> dict:
 
 def recover_jobs() -> None:
     """Un trabajo no puede seguir en marcha si el programa acaba de arrancar."""
+    if trash_dir().exists():
+        limit = time.time() - TRASH_DAYS * 86400
+        for item in trash_dir().iterdir():
+            if item.stat().st_mtime < limit:
+                shutil.rmtree(item, ignore_errors=True)
     if not store.JOBS.exists():
         return
     for directory in store.JOBS.iterdir():
@@ -241,14 +272,21 @@ async def upload(file: UploadFile = File(...)):
     directory.mkdir(parents=True)
     destination = directory / f"original{suffix}"
     size = 0
+    digest = hashlib.sha256()
     with destination.open("wb") as out:
         while chunk := await file.read(1024 * 1024):
             size += len(chunk)
+            digest.update(chunk)
             if size > MAX_UPLOAD:
                 out.close()
                 shutil.rmtree(directory, ignore_errors=True)
                 raise HTTPException(400, "El archivo supera los 800 MB.")
             out.write(chunk)
+    fingerprint = digest.hexdigest()
+    for other in list_jobs():
+        if other.get("huella") == fingerprint:
+            shutil.rmtree(directory, ignore_errors=True)
+            return {**other, "duplicado": True}
     try:
         analyzer = epub_tr.analyze if suffix == ".epub" else pdf_tr.analyze
         info = await asyncio.to_thread(analyzer, destination)
@@ -262,7 +300,7 @@ async def upload(file: UploadFile = File(...)):
     (directory / "texto_original.json").write_text(json.dumps(paragraphs, ensure_ascii=False), encoding="utf-8")
     terms = await asyncio.to_thread(tools.suggest_terms, paragraphs)
     return write_job(
-        job_id, id=job_id, archivo=name, creado=time.time(), estado="listo", progreso=0, hechos=0, total=info["caracteres"],
+        job_id, id=job_id, huella=fingerprint, archivo=name, creado=time.time(), estado="listo", progreso=0, hechos=0, total=info["caracteres"],
         mensaje="", terminos=terms, salidas={}, avisos_calidad=0, **info,
     )
 
@@ -277,8 +315,192 @@ def delete_job(job_id: str):
     directory = job_dir(job_id)
     if job_id in stop_flags:
         raise HTTPException(409, "Detén la traducción antes de borrar el libro.")
-    shutil.rmtree(directory)
+    trash_dir().mkdir(parents=True, exist_ok=True)
+    target = trash_dir() / job_id
+    shutil.rmtree(target, ignore_errors=True)
+    shutil.move(str(directory), str(target))
+    os.utime(target)
     return {"ok": True}
+
+
+@app.post("/api/libros/{job_id}/restaurar")
+def restore_job(job_id: str):
+    if not re.fullmatch(r"[0-9a-f]{32}", job_id) or not (trash_dir() / job_id).is_dir():
+        raise HTTPException(404, "Ese libro ya no está en la papelera.")
+    store.JOBS.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(trash_dir() / job_id), str(store.JOBS / job_id))
+    return read_job(job_id)
+
+
+@app.get("/api/papelera")
+def list_trash():
+    books = []
+    for item in trash_dir().iterdir() if trash_dir().exists() else []:
+        try:
+            job = json.loads((item / "estado.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        books.append({"id": job.get("id"), "titulo": job.get("titulo") or job.get("archivo"), "borrado": item.stat().st_mtime, "bytes": _size(item)})
+    return sorted(books, key=lambda book: book["borrado"], reverse=True)
+
+
+@app.delete("/api/papelera")
+def empty_trash():
+    shutil.rmtree(trash_dir(), ignore_errors=True)
+    return {"ok": True}
+
+
+@app.get("/api/almacenamiento")
+def storage_info():
+    return {"carpeta": str(store.DATA), "libros": _size(store.JOBS), "papelera": _size(trash_dir()), "memoria": _size(store.DATA / "memoria.sqlite")}
+
+
+@app.post("/api/almacenamiento/abrir")
+def open_data_folder():
+    if os.name != "nt":
+        raise HTTPException(400, "Solo disponible en Windows.")
+    os.startfile(store.DATA)  # noqa: S606
+    return {"ok": True}
+
+
+@app.post("/api/libros/{job_id}/datos")
+def edit_metadata(job_id: str, body: dict):
+    read_job(job_id)
+    changes = {key: str(body[key]).strip()[:300] for key in ("titulo", "autor") if key in body}
+    if "titulo" in changes and not changes["titulo"]:
+        raise HTTPException(400, "El título no puede quedar vacío.")
+    return write_job(job_id, **changes)
+
+
+@app.get("/api/libros/{job_id}/segmentos")
+def list_segments(job_id: str, q: str = "", pagina: int = 0, desde: int = 0, limite: int = 40):
+    segments = edicion.load(job_dir(job_id))
+    needle = tools._fold(q.strip())
+    found = []
+    for index, segment in enumerate(segments):
+        if pagina and edicion.page_of(segment["lugar"]) != pagina:
+            continue
+        editable = edicion.to_editable(segment["traduccion"])
+        if needle and needle not in tools._fold(editable) and needle not in tools._fold(segment["original"]):
+            continue
+        found.append({"id": index, "lugar": segment["lugar"], "tipo": segment.get("tipo"), "original": segment["original"], "traduccion": editable, "editado": segment.get("editado", False)})
+    return {"total": len(found), "segmentos": found[max(0, desde): max(0, desde) + min(limite, 100)], "pendientes": read_job(job_id).get("cambios_pendientes", False)}
+
+
+def _store_segment(job_id: str, segment: dict, fragment: str) -> None:
+    segment["traduccion"] = fragment
+    memory_store = get_memory()
+    memory_store.put_many([(segment["clave"], fragment), (segment["clave_general"], fragment)])
+    write_job(job_id, cambios_pendientes=True)
+
+
+@app.put("/api/libros/{job_id}/segmentos/{index}")
+def update_segment(job_id: str, index: int, body: dict):
+    directory = job_dir(job_id)
+    segments = edicion.load(directory)
+    if not 0 <= index < len(segments):
+        raise HTTPException(404, "Ese párrafo no existe.")
+    segment = segments[index]
+    text = str(body.get("traduccion", "")).strip()
+    if not text:
+        raise HTTPException(400, "La traducción no puede quedar vacía.")
+    if not edicion.valid_marks(edicion.to_editable(segment["traduccion"]), text):
+        raise HTTPException(400, "Conserva las marcas ⟦ ⟧: guardan cursivas, enlaces y notas.")
+    segment["editado"] = True
+    _store_segment(job_id, segment, edicion.from_editable(text))
+    edicion.save(directory, segments)
+    return {"traduccion": edicion.to_editable(segment["traduccion"]), "avisos": calidad.check(segment["original"], edicion.plain_text(segment["traduccion"]), segment["lugar"], read_job(job_id).get("opciones", {}).get("origen", "auto"), read_job(job_id).get("destino", "es"), [])}
+
+
+@app.post("/api/libros/{job_id}/segmentos/{index}/retraducir")
+def retranslate_segment(job_id: str, index: int):
+    directory = job_dir(job_id)
+    job = read_job(job_id)
+    segments = edicion.load(directory)
+    if not 0 <= index < len(segments):
+        raise HTTPException(404, "Ese párrafo no existe.")
+    if job_id in stop_flags:
+        raise HTTPException(409, "Espera a que termine la traducción en curso.")
+    segment = segments[index]
+    options = job.get("opciones", {})
+    context = edicion.plain_text(segments[index - 1]["traduccion"])[-400:] if index else ""
+    try:
+        engine = build_engine(options.get("motor", "prueba"), store.load_config())
+        result = engine.translate([segment["fragmento"]], options.get("origen", "auto"), options.get("destino", "es"), context)[0]
+    except EngineError as exc:
+        raise HTTPException(400, str(exc))
+    segment["editado"] = True
+    _store_segment(job_id, segment, result)
+    edicion.save(directory, segments)
+    get_memory().add_usage(options.get("motor", "prueba"), len(segment["original"]))
+    return {"traduccion": edicion.to_editable(result)}
+
+
+@app.post("/api/libros/{job_id}/reemplazar")
+def replace_everywhere(job_id: str, body: dict):
+    directory = job_dir(job_id)
+    search, change = str(body.get("buscar", "")), str(body.get("cambiar", ""))
+    if len(search.strip()) < 2:
+        raise HTTPException(400, "Escribe al menos dos letras para buscar.")
+    pattern = re.compile(r"(?<!\w)" + re.escape(search) + r"(?!\w)")
+    segments = edicion.load(directory)
+    if body.get("simular"):
+        return {"coincidencias": sum(len(pattern.findall(edicion.plain_text(s["traduccion"]))) for s in segments)}
+    changed = 0
+    escaped = html.escape(change, quote=False)
+    for segment in segments:
+        parts = re.split(r"(<[^>]+>)", segment["traduccion"])
+        updated = "".join(part if part.startswith("<") else pattern.sub(lambda _: escaped, part) for part in parts)
+        if updated != segment["traduccion"]:
+            changed += 1
+            segment["editado"] = True
+            _store_segment(job_id, segment, updated)
+    edicion.save(directory, segments)
+    return {"parrafos": changed}
+
+
+@app.get("/api/libros/{job_id}/exportar/{kind}")
+def export_book(job_id: str, kind: str):
+    job = read_job(job_id)
+    directory = job_dir(job_id)
+    segments = edicion.load(directory)
+    if not segments:
+        raise HTTPException(404, "Vuelve a traducir el libro con esta versión para poder exportarlo.")
+    stem = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "", job.get("titulo") or Path(job["archivo"]).stem)[:120].strip() or "libro"
+    if kind == "txt":
+        data = edicion.export_txt(segments, job.get("titulo") or stem).encode("utf-8")
+        return Response(data, media_type="text/plain; charset=utf-8", headers={"Content-Disposition": _attachment(f"{stem}.txt")})
+    if kind == "epub":
+        target = directory / "exportado.epub"
+        edicion.export_epub(segments, target, job.get("titulo") or stem, job.get("autor") or "", job.get("destino", "es"), job_id)
+        return FileResponse(target, filename=f"{stem}.epub", media_type="application/epub+zip")
+    raise HTTPException(404, "Formato no disponible.")
+
+
+def _attachment(name: str) -> str:
+    return "attachment; filename*=UTF-8''" + quote(name)
+
+
+@app.get("/api/libros/{job_id}/texto/{doc}/{number}")
+def viewer_text(job_id: str, doc: str, number: int):
+    path = viewer_file(job_id, doc)
+    if read_job(job_id)["tipo"] == "pdf":
+        with render_lock:
+            document = pdf_tr.fitz.open(path)
+            try:
+                if not 1 <= number <= len(document):
+                    raise HTTPException(404, "Esa página no existe.")
+                return {"texto": document[number - 1].get_text()}
+            finally:
+                document.close()
+    book = epub_tr.Book(path)
+    try:
+        if not 1 <= number <= len(book.documents):
+            raise HTTPException(404, "Esa sección no existe.")
+        root = epub_tr._parse(book.zip.read(book.documents[number - 1])).getroot()
+        return {"texto": " ".join(" ".join(root.itertext()).split())}
+    finally:
+        book.zip.close()
 
 
 def run_translation(job_id: str, options: dict) -> None:
@@ -287,7 +509,8 @@ def run_translation(job_id: str, options: dict) -> None:
     job = read_job(job_id)
     with running_lock:
         try:
-            write_job(job_id, estado="traduciendo", mensaje="", empezado=time.time(), fase="traduciendo", paso=0, pasos=0, progreso=0)
+            _keep_awake(True)
+            write_job(job_id, estado="traduciendo", mensaje="", empezado=time.time(), fase="traduciendo", paso=0, pasos=0, progreso=0, cambios_pendientes=False)
             engine = build_engine(options["motor"], store.load_config())
             last_write = [0.0]
 
@@ -312,6 +535,9 @@ def run_translation(job_id: str, options: dict) -> None:
                 parse_glossary(options.get("glosario", "")), progress, stop.is_set, stage,
                 reuse_any=options.get("reanudar", False),
             )
+            translator.ignore_memory = bool(options.get("sin_memoria"))
+            if options.get("paginas"):
+                translator.pages = set(edicion.parse_range(options["paginas"]))
             suffix = ".epub" if job["tipo"] == "epub" else ".pdf"
             output = directory / f"traducido{suffix}"
             bilingual = directory / f"bilingue{suffix}" if options.get("bilingue") else None
@@ -321,6 +547,7 @@ def run_translation(job_id: str, options: dict) -> None:
             if job["tipo"] == "pdf":
                 translator.issues.extend(calidad.verify_pdf(output, lambda done, total: stage("revisando", done, total)))
             (directory / "informe.json").write_text(json.dumps(translator.issues, ensure_ascii=False), encoding="utf-8")
+            edicion.save(directory, translator.segments)
             stage("revisando", 0, 1)
             try:
                 save_translated_text(directory, job["tipo"], output)
@@ -334,7 +561,7 @@ def run_translation(job_id: str, options: dict) -> None:
                 job_id, estado="terminado", fase="", progreso=100, salidas=outputs, avisos_calidad=len(translator.issues),
                 calidad=calidad.summary(translator.issues),
                 estadisticas=stats, enviados=translator.sent, reutilizados=translator.reused, motor=options["motor"],
-                destino=options["destino"], terminado=time.time(), mensaje="",
+                destino=options["destino"], terminado=time.time(), mensaje="", parcial=options.get("paginas", ""),
             )
         except Cancelled:
             write_job(job_id, estado="detenido", fase="", mensaje="Traducción detenida. Lo hecho queda guardado para reanudar.")
@@ -344,6 +571,7 @@ def run_translation(job_id: str, options: dict) -> None:
             traceback.print_exc()
             write_job(job_id, estado="error", fase="", mensaje=f"Error inesperado: {type(exc).__name__}: {exc}")
         finally:
+            _keep_awake(False)
             stop_flags.pop(job_id, None)
 
 
@@ -365,7 +593,24 @@ async def start_translation(job_id: str, request: Request):
         "motor": body.get("motor", "prueba"), "origen": body.get("origen", "auto"), "destino": body.get("destino", "es"),
         "bilingue": bool(body.get("bilingue")), "glosario": body.get("glosario", ""),
         "reanudar": job.get("estado") in ("pausado", "detenido", "error") or bool(body.get("reanudar")),
+        "sin_memoria": bool(body.get("sin_memoria")),
+        "paginas": str(body.get("paginas", "")).strip(),
     }
+    if options["paginas"]:
+        try:
+            if not edicion.parse_range(options["paginas"], job.get("unidades")):
+                raise ValueError
+        except ValueError:
+            raise HTTPException(400, f"No entiendo esas páginas. Escríbelas así: 40-45, 50 (máximo {job.get('unidades')}).")
+    general = store.load_config().get("glosario_general", "")
+    if body.get("reconstruir"):
+        options["glosario"] = job.get("opciones", {}).get("glosario", options["glosario"])
+        options["reanudar"] = True
+    elif general:
+        options["glosario"] = "\n".join(part for part in (general, options["glosario"]) if part)
+    options["glosario_libro"] = job.get("opciones", {}).get("glosario_libro", "") if body.get("reconstruir") else body.get("glosario", "")
+    if options["reanudar"]:
+        options["sin_memoria"] = False
     if options["origen"] not in LANGUAGES or options["destino"] not in LANGUAGES or options["destino"] == "auto":
         raise HTTPException(400, "Idioma no admitido.")
     try:

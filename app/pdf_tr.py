@@ -427,23 +427,27 @@ def _translate(document: fitz.Document, path: Path, output: Path, bilingual_outp
     continued = {id(p.continues) for page in pages for p in page if p.continues is not None}
     items: list[Item] = []
     ordered: list[Paragraph] = []
+    sizes = sorted(p.size for page in pages for p in page) or [11.0]
+    body_size = sizes[len(sizes) // 2]
     for index, page in enumerate(pages):
         for paragraph in page:
             text = plain(paragraph.fragment)
             if not has_letters(text) or id(paragraph) in continued:
+                continue
+            if translator.pages is not None and index + 1 not in translator.pages and not (paragraph.continues is not None and index + 2 in translator.pages):
                 continue
             fragment = paragraph.fragment
             where = f"página {index + 1}"
             if paragraph.continues is not None:
                 # Se traduce la frase entera y luego se reparte entre las dos páginas.
                 fragment = f"{plain(fragment).replace('&', '&amp;').replace('<', '&lt;')} {plain(paragraph.continues.fragment).replace('&', '&amp;').replace('<', '&lt;')}"
-            paragraph.item = Item(fragment=fragment, where=where)
+            paragraph.item = Item(fragment=fragment, where=where, kind="titulo" if paragraph.size > body_size * 1.25 and len(text) < 120 else "parrafo")
             items.append(paragraph.item)
             ordered.append(paragraph)
 
-    toc = document.get_toc(simple=False)
+    toc = document.get_toc(simple=False) if translator.pages is None else []
     toc_items = [Item(fragment=html.escape(entry[1], quote=False), where="índice") for entry in toc if has_letters(entry[1])]
-    title = (document.metadata or {}).get("title") or ""
+    title = ((document.metadata or {}).get("title") or "") if translator.pages is None else ""
     title_item = Item(fragment=html.escape(title, quote=False), where="metadatos") if has_letters(title) else None
     translator.run(items + toc_items + ([title_item] if title_item else []))
 
