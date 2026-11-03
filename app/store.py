@@ -34,8 +34,18 @@ DEFAULT_CONFIG = {
     "claude_model": "claude-sonnet-5-5",
     "claude_summary_model": "claude-haiku-5-5",
     "glosario_general": "",
+    "ia_motor": "",
+    "ia_groq_clave": "",
+    "ia_groq_modelo": "",
+    "ia_mistral_clave": "",
+    "ia_mistral_modelo": "",
+    "ia_ollama_modelo": "",
+    "ia_ollama_url": "",
+    "ia_personalizada_clave": "",
+    "ia_personalizada_url": "",
+    "ia_personalizada_modelo": "",
 }
-SECRET_FIELDS = ("deepl_key", "azure_key", "libre_key", "claude_key")
+SECRET_FIELDS = ("deepl_key", "azure_key", "libre_key", "claude_key", "ia_groq_clave", "ia_mistral_clave", "ia_personalizada_clave")
 
 
 def ensure_dirs() -> None:

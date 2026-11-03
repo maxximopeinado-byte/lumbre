@@ -199,6 +199,34 @@ details.plegable .interior{padding-bottom:14px}
 .descarga b{display:block;font-size:15px}.descarga small{font-size:13px;opacity:.86}
 .descarga svg{width:34px;height:34px}
 .fila{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.est-cabeza{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}
+.est-meta{font-size:13.5px;color:var(--suave)}
+.est-nav{margin-bottom:18px;background:none;padding:0;gap:6px;flex-wrap:wrap;width:auto;overflow:visible}
+.est-nav button{background:var(--avena)}.est-nav button[aria-pressed=true]{background:var(--topo-hondo);color:var(--boton-t);box-shadow:none}
+.est-nav small{font-size:12px;opacity:.75;margin-left:4px;font-variant-numeric:tabular-nums}
+@media (max-width:700px){.est-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%}.est-cabeza .boton{min-height:36px;padding-block:6px;font-size:14px}}
+.est-metodos{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px}
+.est-metodo{background:var(--lino);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.est-metodo h3{font:500 22px/1.2 var(--display);margin:0}.est-metodo p{margin:0;font-size:14.5px;line-height:1.45;color:var(--suave)}
+.est-metodo .boton{margin-top:auto;align-self:flex-start}
+.est-barra{height:8px;background:var(--avena);border-radius:999px;overflow:hidden;margin-block:12px}.est-barra i{display:block;height:100%;background:var(--topo);border-radius:999px;transition:width .3s}
+.est-prosa{max-width:68ch;font:400 18.5px/1.5 var(--display)}.est-prosa p{margin:0 0 .85em}
+.est-h{font:500 22px/1.2 var(--display);margin:26px 0 12px}
+.ref{border:0;background:none;padding:0;font:400 13px var(--texto);color:var(--suave);text-decoration:underline;text-underline-offset:2px;cursor:pointer;display:inline-block;margin-top:3px;min-height:24px}
+.ref-t{display:block;font:400 13px var(--texto);color:var(--suave);margin-top:3px}
+.est-tema{border-bottom:1px solid var(--avena);padding-block:4px}.est-tema summary{cursor:pointer;font:500 20px/1.25 var(--display);padding-block:11px;list-style-position:inside;overflow-wrap:anywhere}
+.est-tema summary small{display:block;font:400 13.5px/1.4 var(--texto);color:var(--suave);margin-top:3px}
+.est-tema>div{padding:2px 0 16px}.est-tema .est-prosa{font-size:17px;margin-bottom:12px}
+.est-def{padding-block:11px;border-bottom:1px solid var(--avena);max-width:72ch}.est-def b{font-weight:600}.est-def p{margin:3px 0 0;line-height:1.45}
+.est-filtros{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:16px}.est-filtros .campo{margin:0;min-width:min(100%,220px)}
+.tarjeta-e{background:var(--mantequilla);color:var(--mantequilla-t);border:0;border-radius:18px;width:100%;max-width:620px;min-height:220px;padding:26px;font:400 21px/1.38 var(--display);text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow-wrap:anywhere}
+.tarjeta-e.dorso{background:var(--salvia);color:var(--salvia-t)}.tarjeta-e small{font:400 13px var(--texto);opacity:.8}
+.est-acciones{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.est-pregunta{max-width:68ch;font:400 20px/1.38 var(--display);margin:6px 0 14px;overflow-wrap:anywhere}
+.est-opciones{display:grid;gap:9px;max-width:68ch}.est-opcion{border:1px solid var(--topo-claro);background:var(--papel);color:inherit;border-radius:12px;padding:12px 14px;min-height:46px;text-align:left;font-size:15.5px;line-height:1.35;cursor:pointer;overflow-wrap:anywhere}
+.est-opcion:hover:not(:disabled){background:var(--lino)}.est-opcion:disabled{cursor:default}.est-opcion.bien{background:var(--salvia);color:var(--salvia-t);border-color:transparent}.est-opcion.mal{background:var(--rubor);color:var(--rubor-t);border-color:transparent}
+.est-nota{font:500 52px/1 var(--display);margin:6px 0}
+.est-desarrollo{padding-block:14px;border-bottom:1px solid var(--avena);max-width:72ch}.est-desarrollo textarea{min-height:92px;margin-block:9px}.est-desarrollo details summary{cursor:pointer;font-weight:500;font-size:14.5px;padding-block:6px}.est-desarrollo details p{line-height:1.5;margin:6px 0 0}
 .lista-ideas{counter-reset:idea;list-style:none;padding:0;margin:0;display:grid;gap:15px;max-width:68ch}
 .lista-ideas li{counter-increment:idea;display:grid;grid-template-columns:30px 1fr;gap:10px;font:400 18.5px/1.42 var(--display)}
 .lista-ideas li::before{content:counter(idea);color:var(--topo);font-style:italic;font-size:21px}
@@ -455,18 +483,17 @@ async function pintarProgreso(){
   }catch{}
   S.temp=setTimeout(pintarProgreso,1000);
 }
-const claudeListo=()=>S.motores.find(m=>m.id==="claude")?.listo;
 async function vResultado(l){
   const inf=await api(`/api/libros/${l.id}/informe`);
-  const q=l.calidad||{alta:0,media:0,baja:0};const pest=[["leer","Leer"],["descargas","Descargas"],["resumen","Resumen"],["preguntas","Preguntas"],["corregir","Corregir"],["revision",`Calidad${q.alta+q.media?` · ${q.alta+q.media}`:""}`]];
+  const q=l.calidad||{alta:0,media:0,baja:0};const pest=[["leer","Leer"],["descargas","Descargas"],["estudiar","Estudiar"],["preguntas","Consultar"],["corregir","Corregir"],["revision",`Calidad${q.alta+q.media?` · ${q.alta+q.media}`:""}`]];
   const motor=S.motores.find(m=>m.id===l.motor)?.label||l.motor;
   const flecha=`<svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><path d="M9 6h16a3 3 0 0 1 3 3v21H12a3 3 0 0 1-3-3V6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 27a3 3 0 0 1 3-3h16M18 12v7m0 0-3-3m3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const c={
   leer:`${l.parcial?`<div class="aviso mantequilla fila" style="justify-content:space-between"><span>Traducción parcial: ${esc(l.parcial)}.</span><button class="boton suave" id="completar">Completar el libro</button></div>`:""}${l.cambios_pendientes?avisoPendientes():""}<div id="visor"></div>`,
   corregir:`${l.cambios_pendientes?avisoPendientes():""}<div id="editor"></div>`,
   descargas:`${l.motor==="prueba"?`<div class="aviso mantequilla">Prueba de maquetación: el texto no está traducido de verdad.</div>`:""}${(l.avisos||[]).map(a=>`<div class="aviso mantequilla">${esc(a)}</div>`).join("")}<div class="descargas"><a class="descarga salvia" href="/api/libros/${l.id}/descargar/traducido">${flecha}<span><b>Libro traducido</b><small>${esc(l.tipo.toUpperCase())} con el formato original</small></span></a>${l.salidas.bilingue?`<a class="descarga cielo" href="/api/libros/${l.id}/descargar/bilingue">${flecha}<span><b>Edición bilingüe</b><small>Original y traducción</small></span></a>`:""}</div><div class="dato"><span>Motor</span><b>${esc(motor)}</b></div><div class="dato"><span>Enviados al motor</span><b>${num(l.enviados)} caracteres</b></div><div class="dato"><span>Reutilizados sin gastar cuota</span><b>${num(l.reutilizados)} caracteres</b></div><div class="dato"><span>Avisos de calidad</span><b>${num(l.avisos_calidad)}</b></div><div class="etiqueta" style="margin-top:16px">Exportar el texto traducido</div><div class="fila" style="margin-top:8px"><a class="boton suave" href="/api/libros/${l.id}/exportar/epub">EPUB para leer</a><a class="boton suave" href="/api/libros/${l.id}/exportar/txt">TXT</a></div><div class="fila" style="margin-top:16px"><button class="boton linea" id="repetir">Retraducir el libro</button><button class="boton linea" id="borrar">Mover a la papelera</button></div>`,
-  resumen:`<div class="campo" style="max-width:260px"><label for="nivel">Extensión</label><select id="nivel"><option value="breve">Breve · 5 ideas</option><option value="media" selected>Media · 10 ideas</option><option value="extensa">Extensa · 15 ideas</option></select></div><div class="fila" style="margin-bottom:14px"><button class="boton" id="res-claude" ${claudeListo()?"":"disabled"}>Resumir con Claude</button><button class="boton suave" id="res-frases">Frases clave, gratis</button></div>${claudeListo()?"":`<p class="vacio-t" style="margin-bottom:14px">El resumen redactado necesita una clave de la API de Claude en Ajustes. Las frases clave citan literalmente el libro.</p>`}<div id="sal-res"></div>`,
-  preguntas:`<form class="pregunta" id="f-preg"><input type="text" id="pregunta" placeholder="¿Qué argumenta sobre…?" aria-label="Tu pregunta"><button class="boton">Buscar</button></form><div id="sal-preg"><p class="vacio-t">Encontrará los pasajes más relacionados.${claudeListo()?" Claude redactará una respuesta con referencias.":" Con una clave de Claude, también redactará una respuesta."}</p></div>`,
+  estudiar:`<div id="estudio"></div>`,
+  preguntas:`<form class="pregunta" id="f-preg"><input type="text" id="pregunta" placeholder="¿Qué argumenta sobre…?" aria-label="Tu pregunta"><button class="boton">Buscar</button></form><div id="sal-preg"><p class="vacio-t">Encontrará los pasajes más relacionados.${S.ajustes?.ia_motor?" La IA elegida en Ajustes redactará una respuesta con referencias.":" Si eliges una IA en Ajustes, también redactará una respuesta."}</p></div>`,
   revision:vCalidad(l,inf)
   }[S.pestana];
   return`<div class="pestanas-libro" role="tablist">${pest.map(([k,t])=>`<button role="tab" data-p="${k}" aria-selected="${k===S.pestana}">${esc(t)}</button>`).join("")}</div><section class="panel">${c}</section>`;
@@ -563,14 +590,87 @@ function enlazar(l){
   const vo=document.getElementById("ver-original");if(vo)vo.onclick=()=>{const panel=vo.closest(".columnas");panel.outerHTML=`<div class="fila" style="margin-bottom:10px"><button class="boton suave" id="prep-volver">Volver a preparar</button></div><div id="visor"></div>`;document.getElementById("prep-volver").onclick=()=>pintar();iniciarVisor(l)};
   const rep=document.getElementById("repetir");if(rep)rep.onclick=()=>pintar(true);
   const bo=document.getElementById("borrar");if(bo)bo.onclick=()=>borrarLibro(l);
-  const rc=document.getElementById("res-claude"),rf=document.getElementById("res-frases");
-  const res=async(metodo,b)=>{const s=document.getElementById("sal-res");b.disabled=true;s.innerHTML=`<p class="vacio-t">${metodo==="claude"?"Claude está leyendo el libro; puede tardar unos minutos…":"Buscando las frases más representativas…"}</p>`;
-    try{const r=await post(`/api/libros/${l.id}/resumen`,{metodo,nivel:document.getElementById("nivel").value});s.innerHTML=r.metodo==="claude"?`<div class="markdown">${md(r.markdown)}</div>`:(r.frases.length?`<div class="aviso cielo">Frases literales del libro. No es un resumen redactado.</div><ol class="lista-ideas">${r.frases.map(x=>`<li><span>${esc(x.texto)}<small>${esc(x.lugar)}</small></span></li>`).join("")}</ol>`:`<div class="aviso mantequilla">No se han encontrado frases adecuadas.</div>`)}catch(e){s.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`}b.disabled=false};
-  if(rc)rc.onclick=()=>res("claude",rc);if(rf)rf.onclick=()=>res("frases",rf);
+  iniciarEstudio(l);
   const fp=document.getElementById("f-preg");
   if(fp)fp.onsubmit=async e=>{e.preventDefault();const s=document.getElementById("sal-preg"),q=document.getElementById("pregunta").value.trim();if(!q)return;s.innerHTML=`<p class="vacio-t">Buscando…</p>`;
-    try{const r=await post(`/api/libros/${l.id}/preguntar`,{pregunta:q,metodo:claudeListo()?"claude":"local"});s.innerHTML=(r.respuesta?`<div class="markdown" style="margin-bottom:20px">${md(r.respuesta)}</div><div class="etiqueta" style="margin-bottom:9px">Pasajes consultados</div>`:"")+(r.pasajes.length?r.pasajes.map(p=>`<blockquote class="pasaje">${esc(p.texto)}<small>${esc(p.lugar)}</small></blockquote>`).join(""):`<div class="aviso mantequilla">No hay pasajes relacionados con esa pregunta.</div>`)}catch(err){s.innerHTML=`<div class="aviso rubor">${esc(err.message)}</div>`}};
+    try{const r=await post(`/api/libros/${l.id}/preguntar`,{pregunta:q,metodo:S.ajustes?.ia_motor?"ia":"local"});s.innerHTML=(r.respuesta?`<div class="markdown" style="margin-bottom:20px">${md(r.respuesta)}</div><div class="etiqueta" style="margin-bottom:9px">Pasajes consultados</div>`:"")+(r.pasajes.length?r.pasajes.map(p=>`<blockquote class="pasaje">${esc(p.texto)}<small>${esc(p.lugar)}</small></blockquote>`).join(""):`<div class="aviso mantequilla">No hay pasajes relacionados con esa pregunta.</div>`)}catch(err){s.innerHTML=`<div class="aviso rubor">${esc(err.message)}</div>`}};
 }
+/* Estudiar ------------------------------------------------------------- */
+const estudioE={};
+const ref=x=>{const lugar=x?.lugar||"";if(!lugar)return"";const m=lugar.match(/página (\d+)/);return m?`<button class="ref" data-pag="${m[1]}">${esc(lugar)}</button>`:`<span class="ref-t">${esc(lugar)}</span>`};
+const mezclar=a=>{const c=[...a];for(let i=c.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[c[i],c[j]]=[c[j],c[i]]}return c};
+const DIAS=[0,1,3,7,16];
+async function iniciarEstudio(l){
+  const c=document.getElementById("estudio");if(!c)return;
+  const E=estudioE[l.id]||(estudioE[l.id]={vista:"resumen",tema:"",modo:"expres"});
+  E.c=c;E.l=l;E.ir=n=>{S.visorPagina={...(S.visorPagina||{}),[l.id]:n};S.pestana="leer";pintar()};
+  c.onclick=e=>{const b=e.target.closest("[data-pag]");if(b)E.ir(+b.dataset.pag)};
+  c.innerHTML=`<p class="vacio-t">Cargando…</p>`;
+  try{E.d=await api(`/api/libros/${l.id}/estudio`)}catch(e){c.innerHTML=`<div class="aviso rubor">${esc(e.message)}</div>`;return}
+  E.d.progreso=E.d.progreso||{};estudioPintar(E);
+}
+function estudioPintar(E){
+  if(!document.body.contains(E.c))return;
+  const d=E.d,j=d.trabajo;
+  if(j.estado==="preparando")return estudioEspera(E);
+  const err=j.estado==="error"?`<div class="aviso rubor">${esc(j.mensaje)}</div>`:"";
+  if(!d.material||E.rehacer)return estudioInicio(E,err);
+  const m=d.material,vs=[["resumen","Mega resumen",0],["temas","Temas",m.temas.length],["conceptos","Conceptos y datos",m.recuento.conceptos+m.recuento.cronologia+m.recuento.personas],["tarjetas","Tarjetas",m.recuento.tarjetas],["test","Test",m.recuento.test],["desarrollo","Desarrollo",m.recuento.desarrollo]].filter(v=>v[0]==="resumen"||v[2]>0);
+  if(!vs.some(v=>v[0]===E.vista))E.vista="resumen";
+  E.c.innerHTML=`${err}<div class="est-cabeza"><span class="est-meta">${esc(m.metodo)}${m.fuente==="original"?" · sobre el texto original":""}</span><div class="fila"><a class="boton linea" href="/api/libros/${E.l.id}/estudio/exportar/md">Exportar</a>${m.recuento.tarjetas?`<a class="boton linea" href="/api/libros/${E.l.id}/estudio/exportar/anki">Anki</a>`:""}<button class="boton linea" id="est-rehacer">Volver a preparar</button></div></div>${m.aviso?`<div class="aviso cielo">${esc(m.aviso)}</div>`:""}${m.fuente==="original"&&!/^IA/.test(m.metodo)?`<div class="aviso mantequilla">Está en el idioma original porque no hay texto traducido.</div>`:""}<div class="pestanas-libro est-nav">${vs.map(([k,t,n])=>`<button data-v="${k}" aria-pressed="${k===E.vista}">${esc(t)}${n?`<small>${n}</small>`:""}</button>`).join("")}</div><div id="est-v"></div>`;
+  E.c.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{E.vista=b.dataset.v;E.t=null;E.cola=null;estudioPintar(E)});
+  document.getElementById("est-rehacer").onclick=()=>{E.rehacer=true;estudioPintar(E)};
+  ({resumen:vResumenE,temas:vTemasE,conceptos:vConceptosE,tarjetas:vTarjetasE,test:vTestE,desarrollo:vDesarrolloE})[E.vista](E,document.getElementById("est-v"));
+}
+function estudioInicio(E,err){
+  const d=E.d,es=d.estimacion[E.modo],haCambio=d.material&&E.rehacer;
+  E.c.innerHTML=`${err}${haCambio?`<p class="vacio-t" style="margin-bottom:10px">El material actual se sustituirá cuando termine el nuevo. Tu progreso de tarjetas se conserva.</p>`:""}<div class="est-metodos"><div class="est-metodo"><h3>Con IA</h3><p>Resumen redactado, temas, conceptos, cronología, test y preguntas de desarrollo. Siempre en castellano.</p>${d.ia?`<div class="campo"><label for="est-modo">Profundidad</label><select id="est-modo"><option value="expres" ${E.modo==="expres"?"selected":""}>Exprés · ${d.estimacion.expres.peticiones} peticiones</option><option value="completo" ${E.modo==="completo"?"selected":""}>A fondo · ${d.estimacion.completo.peticiones} peticiones</option></select></div><p>${esc(d.ia.nombre)} · ${esc(d.ia.modelo)}. Gastará unos ${num(es.tokens)} tokens. Si se alcanza el límite gratuito, lo hecho se guarda y se reanuda después.</p><button class="boton" id="est-ia">Preparar con IA</button>`:`<p>Elige un servicio gratuito en Ajustes.</p><button class="boton" id="est-ajustes">Ir a Ajustes</button>`}</div><div class="est-metodo"><h3>Sin IA</h3><p>En segundos y sin que nada salga del ordenador. Selecciona frases literales del libro por temas y crea tarjetas y preguntas de completar. Útil, pero no redacta ni razona.</p><button class="boton suave" id="est-local">Preparar sin IA</button></div></div>${haCambio?`<div style="margin-top:14px"><button class="boton linea" id="est-cancelar">Volver al material</button></div>`:""}`;
+  const go=async metodo=>{try{E.d.trabajo=await post(`/api/libros/${E.l.id}/estudio`,{metodo,modo:E.modo});E.rehacer=false;estudioPintar(E)}catch(e){tostada(e.message)}};
+  const on=(id,f)=>{const n=document.getElementById(id);if(n)n.onclick=f};
+  on("est-ia",()=>go("ia"));on("est-local",()=>go("local"));on("est-ajustes",()=>ajustes());on("est-cancelar",()=>{E.rehacer=false;estudioPintar(E)});
+  const mo=document.getElementById("est-modo");if(mo)mo.onchange=()=>{E.modo=mo.value;estudioInicio(E,err)};
+}
+function estudioEspera(E){
+  const j=E.d.trabajo,p=j.total?Math.round(j.hecho/j.total*100):0;
+  E.c.innerHTML=`<p style="font:400 20px/1.3 var(--display);margin:0">${j.metodo==="ia"?"La IA está leyendo el libro":"Analizando el libro"}</p><div class="est-barra"><i style="width:${p}%"></i></div><p class="est-meta" style="margin-bottom:12px">${j.total?`Bloque ${j.hecho} de ${j.total}. Puedes seguir usando la app; respeta los límites del servicio, así que puede tardar.`:"Empezando…"}</p><button class="boton linea" id="est-det">Detener</button>`;
+  document.getElementById("est-det").onclick=()=>post(`/api/libros/${E.l.id}/estudio/detener`,{});
+  clearTimeout(E.reloj);E.reloj=setTimeout(async()=>{if(!document.body.contains(E.c))return;try{const v=E.vista,d=await api(`/api/libros/${E.l.id}/estudio`);E.d=d;E.d.progreso=d.progreso||{};E.vista=v;if(d.trabajo.estado==="listo")tostada("Material de estudio listo");estudioPintar(E)}catch{}},1500);
+}
+function guardarProgreso(E){clearTimeout(E.gp);E.gp=setTimeout(()=>api(`/api/libros/${E.l.id}/estudio/progreso`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(E.d.progreso)}).catch(()=>{}),400)}
+const selTema=(E,id="est-tema-s")=>`<div class="campo"><label for="${id}">Tema</label><select id="${id}"><option value="">Todos los temas</option>${E.d.material.temas.map(t=>`<option value="${t.id}" ${String(E.tema)===String(t.id)?"selected":""}>${esc(t.titulo.slice(0,70))}</option>`).join("")}</select></div>`;
+const parrafos=t=>String(t||"").split(/\n{2,}/).filter(x=>x.trim()).map(x=>`<p>${esc(x)}</p>`).join("");
+function vResumenE(E,c){const m=E.d.material;c.innerHTML=`<div class="est-prosa">${parrafos(m.mega_resumen)}</div>${m.ideas_clave.length?`<h3 class="est-h">Ideas clave</h3><ol class="lista-ideas">${m.ideas_clave.map(x=>`<li><span>${esc(x)}</span></li>`).join("")}</ol>`:""}`}
+function vTemasE(E,c){const m=E.d.material;c.innerHTML=m.temas.map((t,i)=>`<details class="est-tema" ${i===0?"open":""}><summary>${esc(t.titulo)}${t.descripcion?`<small>${esc(t.descripcion)}</small>`:""}</summary><div>${t.resumen?`<div class="est-prosa">${parrafos(t.resumen)}</div>`:""}${t.puntos.length?`<div class="etiqueta" style="margin-bottom:9px">Puntos importantes</div><ol class="lista-ideas">${t.puntos.map(p=>`<li><span>${esc(p.texto)}${ref(p)}</span></li>`).join("")}</ol>`:""}</div></details>`).join("")}
+function vConceptosE(E,c){const m=E.d.material,sec=(t,xs,f)=>xs.length?`<h3 class="est-h">${t}</h3>${xs.map(f).join("")}`:"";c.innerHTML=sec("Conceptos",m.conceptos,x=>`<div class="est-def"><b>${esc(x.termino)}</b><p>${esc(x.definicion)}</p>${ref(x)}</div>`)+sec("Personas",m.personas,x=>`<div class="est-def"><b>${esc(x.nombre)}</b><p>${esc(x.papel)}</p>${ref(x)}</div>`)+sec("Cronología",m.cronologia,x=>`<div class="est-def"><b>${esc(x.fecha)}</b><p>${esc(x.hecho)}</p>${ref(x)}</div>`)}
+function vTarjetasE(E,c){
+  const P=E.d.progreso.tarjetas||(E.d.progreso.tarjetas={}),ahora=Date.now(),todas=E.d.material.tarjetas.filter(x=>E.tema===""||String(x.tema)===String(E.tema));
+  const debida=x=>!P[x.frente]||P[x.frente].p<=ahora,dominadas=todas.filter(x=>(P[x.frente]?.c||0)>=4).length;
+  if(!E.cola){E.cola=mezclar(todas.filter(debida));E.gira=false}
+  const x=E.cola[0];
+  c.innerHTML=`<div class="est-filtros">${selTema(E)}<p class="est-meta" style="margin:0 0 8px">${E.cola.length} para hoy · ${dominadas} de ${todas.length} dominadas</p></div>${x?`<button class="tarjeta-e ${E.gira?"dorso":""}" id="tj"><span>${esc(E.gira?x.dorso:x.frente)}</span><small>${E.gira?"Respuesta":"Pulsa para ver la respuesta"}</small></button>${E.gira?`<div class="est-acciones"><button class="boton suave" id="tj-no">No la sabía</button><button class="boton" id="tj-si">La sabía</button>${ref(x)}</div>`:""}`:`<div class="aviso salvia">Hoy no quedan tarjetas. Las repetirás cuando toque, para fijarlas mejor.</div><button class="boton suave" id="tj-todas">Repasar todas igualmente</button>`}`;
+  document.getElementById("est-tema-s").onchange=e=>{E.tema=e.target.value;E.cola=null;vTarjetasE(E,c)};
+  const t=document.getElementById("tj");if(t)t.onclick=()=>{E.gira=!E.gira;vTarjetasE(E,c)};
+  const fin=ok=>{const a=P[x.frente]||{c:0},caja=ok?Math.min(5,(a.c||0)+1):1;P[x.frente]={c:caja,p:Date.now()+(ok?DIAS[caja-1]:0)*864e5};E.cola.shift();if(!ok)E.cola.push(x);else if(caja===1)E.cola.push(x);E.gira=false;guardarProgreso(E);vTarjetasE(E,c)};
+  const si=document.getElementById("tj-si"),no=document.getElementById("tj-no");if(si){si.onclick=()=>fin(true);no.onclick=()=>fin(false)}
+  const to=document.getElementById("tj-todas");if(to)to.onclick=()=>{E.cola=mezclar(todas);vTarjetasE(E,c)};
+}
+function vTestE(E,c){
+  const P=E.d.progreso.test||(E.d.progreso.test={fallos:{},intentos:[]}),m=E.d.material;
+  if(!E.t){const fall=m.test.filter(x=>P.fallos[x.pregunta]).length,ult=P.intentos.slice(-1)[0];
+    c.innerHTML=`<div class="est-filtros">${selTema(E)}<div class="campo"><label for="t-n">Preguntas</label><select id="t-n"><option>10</option><option>20</option><option>50</option></select></div></div>${ult?`<p class="est-meta" style="margin-bottom:12px">Último intento: ${ult.a} de ${ult.t}.</p>`:""}<div class="fila"><button class="boton" id="t-go">Empezar</button>${fall?`<button class="boton suave" id="t-fall">Repasar falladas · ${fall}</button>`:""}</div>`;
+    document.getElementById("est-tema-s").onchange=e=>E.tema=e.target.value;
+    const iniciar=xs=>{if(!xs.length){tostada("No hay preguntas para ese tema");return}E.t={q:xs.map(x=>{const orden=mezclar([0,1,2,3]);return{...x,opciones:orden.map(i=>x.opciones[i]),correcta:orden.indexOf(x.correcta)}}),i:0,a:0,r:null,fallos:[]};vTestE(E,c)};
+    document.getElementById("t-go").onclick=()=>iniciar(mezclar(m.test.filter(x=>E.tema===""||String(x.tema)===String(E.tema))).slice(0,+document.getElementById("t-n").value));
+    const tf=document.getElementById("t-fall");if(tf)tf.onclick=()=>iniciar(mezclar(m.test.filter(x=>P.fallos[x.pregunta])));
+    return}
+  const T=E.t;
+  if(T.i>=T.q.length){const pc=Math.round(T.a/T.q.length*100);c.innerHTML=`<p class="est-nota">${T.a} / ${T.q.length}</p><p class="est-meta" style="margin-bottom:14px">${pc} % de aciertos.</p>${T.fallos.length?`<h3 class="est-h">Para repasar</h3>${T.fallos.map(x=>`<div class="est-def"><b>${esc(x.pregunta)}</b><p>${esc(x.opciones[x.correcta])}. ${esc(x.explicacion)}</p>${ref(x)}</div>`).join("")}`:`<div class="aviso salvia">Todo correcto.</div>`}<div class="est-acciones"><button class="boton" id="t-otro">Otro test</button></div>`;document.getElementById("t-otro").onclick=()=>{E.t=null;vTestE(E,c)};return}
+  const x=T.q[T.i];
+  c.innerHTML=`<p class="est-meta">Pregunta ${T.i+1} de ${T.q.length}</p><p class="est-pregunta">${esc(x.pregunta)}</p><div class="est-opciones">${x.opciones.map((o,i)=>`<button class="est-opcion ${T.r===null?"":i===x.correcta?"bien":i===T.r?"mal":""}" data-o="${i}" ${T.r===null?"":"disabled"}>${esc(o)}</button>`).join("")}</div>${T.r===null?"":`${x.explicacion?`<p style="max-width:68ch;line-height:1.5;margin:14px 0 4px">${esc(x.explicacion)}</p>`:""}${ref(x)}<div class="est-acciones"><button class="boton" id="t-sig">${T.i+1<T.q.length?"Siguiente":"Ver resultado"}</button></div>`}`;
+  c.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{T.r=+b.dataset.o;if(T.r===x.correcta){T.a++;delete P.fallos[x.pregunta]}else{T.fallos.push(x);P.fallos[x.pregunta]=1}vTestE(E,c)});
+  const sg=document.getElementById("t-sig");if(sg)sg.onclick=()=>{T.i++;T.r=null;if(T.i>=T.q.length){P.intentos=[...P.intentos,{a:T.a,t:T.q.length,f:Date.now()}].slice(-30);guardarProgreso(E)}else guardarProgreso(E);vTestE(E,c)};
+}
+function vDesarrolloE(E,c){const P=E.d.progreso.desarrollo||(E.d.progreso.desarrollo={});c.innerHTML=E.d.material.desarrollo.map((x,i)=>`<div class="est-desarrollo"><b style="font:500 19px/1.3 var(--display)">${esc(x.pregunta)}</b><textarea data-i="${i}" aria-label="Tu respuesta" placeholder="Escribe tu respuesta antes de mirar la modelo">${esc(P[x.pregunta]||"")}</textarea><details><summary>Ver respuesta modelo</summary><p>${esc(x.respuesta)}</p>${ref(x)}</details></div>`).join("");c.querySelectorAll("textarea").forEach(t=>t.oninput=()=>{P[E.d.material.desarrollo[+t.dataset.i].pregunta]=t.value;guardarProgreso(E)})}
 async function ajustes(){
   parar();S.actual=null;marcar("ajustes",true,"Ajustes");await cargarAjustes();document.getElementById("version").textContent=S.version?`Versión ${S.version}`:"";const a=S.ajustes;
   const bloque=(id,t,x,c)=>`<div class="ajuste"><h3>${t}</h3><p>${x}</p>${c}<div class="resultado" id="pr-${id}"></div></div>`;
@@ -580,13 +680,22 @@ async function ajustes(){
   ${bloque("azure","Azure Translator",`2 millones de caracteres gratis al mes con el nivel F0.`,clave("azure_key",a.azure_key,"Clave de Azure","azure")+`<input type="text" id="azure_region" aria-label="Región de Azure" value="${esc(a.azure_region)}" style="margin-top:8px" placeholder="Región, por ejemplo westeurope">`)}
   ${bloque("deepl","DeepL API Free","500.000 caracteres gratis al mes.",clave("deepl_key",a.deepl_key,"Clave de DeepL","deepl"))}
   ${bloque("libre","LibreTranslate","Sin cuota. Requiere tenerlo en marcha en vuestro equipo.",`<div class="fila-clave"><input type="text" id="libre_url" aria-label="Dirección de LibreTranslate" value="${esc(a.libre_url)}"><button type="button" class="boton suave" data-probar="libre">Probar</button></div>`)}
-  ${bloque("claude","API de Claude (opcional)","Para resúmenes redactados y respuestas. Se paga por uso, aparte de la suscripción.",clave("claude_key",a.claude_key,"Clave de la API de Claude","claude"))}
+  ${bloque("claude","API de Claude (opcional)","Motor de traducción de pago, aparte de la suscripción.",clave("claude_key",a.claude_key,"Clave de la API de Claude","claude"))}
   <div style="margin-top:14px"><button class="boton" id="guardar">Guardar cambios</button></div></section>
+  <section class="panel"><h2>IA para estudiar</h2><p class="vacio-t" style="margin-bottom:12px">Es opcional. Redacta resúmenes, temas y preguntas. Sin ella, Lumbre trabaja con frases literales del libro. Al usar una IA externa, el texto del libro sale de este ordenador hacia ese servicio.</p>
+  <div class="campo" style="max-width:320px"><label for="ia_motor">Servicio</label><select id="ia_motor">${[["","Sin IA"],["groq","Groq · gratis, en la nube"],["mistral","Mistral · gratis, en la nube"],["ollama","Ollama · en este ordenador"],["personalizada","Otro compatible con OpenAI"]].map(([k,t])=>`<option value="${k}" ${a.ia_motor===k?"selected":""}>${t}</option>`).join("")}</select></div>
+  <div id="ia-campos" style="margin-top:12px"></div><div class="resultado" id="pr-ia"></div>
+  <div style="margin-top:14px"><button class="boton" id="guardar-ia">Guardar</button></div></section>
   <section class="panel"><h2>Glosario general</h2><p class="vacio-t" style="margin-bottom:10px">Se aplica a todos los libros nuevos. Una entrada por línea.</p><textarea id="glosario_general" aria-label="Glosario general" placeholder="germ theory = teoría microbiana">${esc(a.glosario_general||"")}</textarea><div style="margin-top:10px"><button class="boton" id="guardar-g">Guardar glosario</button></div></section>
   <section class="panel"><h2>Apariencia</h2><div class="segmento" style="width:fit-content">${[["sistema","Sistema"],["light","Claro"],["dark","Oscuro"]].map(([k,t])=>`<button data-tema="${k}" aria-pressed="${(guardado("tema")||"sistema")===k}">${t}</button>`).join("")}</div></section>
   <section class="panel"><h2>Datos</h2><div id="almacen"></div><div class="fila" style="margin-top:12px"><button class="boton suave" id="abrir-datos">Abrir carpeta de datos</button><button class="boton linea" id="vaciar" hidden>Vaciar papelera</button></div><div id="papelera" style="margin-top:10px"></div></section>
   <section class="panel"><h2>Actualizar Lumbre</h2><p style="margin-bottom:12px">Tienes la versión <b>${esc(S.version)}</b>. La app se renueva sola en unos segundos, sin reinstalar ni perder nada.</p><div id="res-act"></div><div class="fila"><button class="boton" id="buscar-act">Buscar actualizaciones</button><button class="boton suave" id="act">Instalar desde archivo</button></div></section>`;
   document.getElementById("volver-a").onclick=biblioteca;
+  const iaInfo={groq:[`Límites diarios con el plan gratuito. Según Groq, no entrena con tus datos por defecto y guarda registros hasta 30 días; el servicio está en EE. UU. Crea la clave en <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com</a>.`,"openai/gpt-oss-120b",true,false],mistral:[`Plan gratuito pensado para probar. Pide teléfono. Mistral avisa de que estas peticiones pueden usarse para entrenar sus modelos: revisa su política antes de usarlo con libros privados. Crea la clave en <a href="https://console.mistral.ai" target="_blank" rel="noopener">console.mistral.ai</a>.`,"mistral-small-latest",true,false],ollama:[`Gratis, privado y sin límites: nada sale del ordenador. Sin tarjeta gráfica es lento. Instálalo desde <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com</a> y descarga un modelo, por ejemplo llama3.1:8b con 16 GB de memoria.`,"llama3.1:8b",false,true],personalizada:[`Cualquier servicio compatible con la API de OpenAI. Indica su dirección base y el modelo.`,"",true,true]};
+  const camposIA=()=>{const k=document.getElementById("ia_motor").value,c=document.getElementById("ia-campos"),i=iaInfo[k];if(!i){c.innerHTML="";return}const cl=a[`ia_${k}_clave`];c.innerHTML=`<p class="vacio-t" style="margin-bottom:10px">${i[0]}</p>${i[2]?`<div class="campo"><label for="ia-clave">Clave</label><input type="password" id="ia-clave" autocomplete="off" placeholder="${cl?`Guardada (${esc(cl)})`:"Pega aquí la clave"}"></div>`:""}${i[3]?`<div class="campo"><label for="ia-url">Dirección base</label><input type="text" id="ia-url" value="${esc(a[`ia_${k}_url`]||(k==="ollama"?"http://localhost:11434/v1":""))}" placeholder="https://…/v1"></div>`:""}<div class="campo"><label for="ia-modelo">Modelo</label><div class="fila-clave"><input type="text" id="ia-modelo" value="${esc(a[`ia_${k}_modelo`]||i[1])}"><button type="button" class="boton suave" id="probar-ia">Probar</button></div></div>`;document.getElementById("probar-ia").onclick=async()=>{const s=document.getElementById("pr-ia");s.textContent="Probando…";await post("/api/ajustes",recogerIA());const r=await post("/api/ia/probar",{});s.textContent=r.ok?`Funciona: «${r.muestra}»`:r.mensaje}};
+  const recogerIA=()=>{const k=document.getElementById("ia_motor").value,c={ia_motor:k};if(iaInfo[k]){const cl=document.getElementById("ia-clave"),u=document.getElementById("ia-url");if(cl&&cl.value.trim())c[`ia_${k}_clave`]=cl.value.trim();if(u)c[`ia_${k}_url`]=u.value.trim();c[`ia_${k}_modelo`]=document.getElementById("ia-modelo").value.trim()}return c};
+  document.getElementById("ia_motor").onchange=()=>{document.getElementById("pr-ia").textContent="";camposIA()};camposIA();
+  document.getElementById("guardar-ia").onclick=async()=>{await post("/api/ajustes",recogerIA());tostada("Ajustes guardados");ajustes()};
   const recoger=()=>{const c={azure_region:document.getElementById("azure_region").value,libre_url:document.getElementById("libre_url").value};for(const k of["azure_key","deepl_key","claude_key"]){const v=document.getElementById(k).value.trim();if(v)c[k]=v}return c};
   document.getElementById("guardar-g").onclick=async()=>{await post("/api/ajustes",{glosario_general:document.getElementById("glosario_general").value});tostada("Glosario guardado")};
   document.querySelectorAll("[data-tema]").forEach(b=>b.onclick=()=>{guardado("tema",b.dataset.tema);aplicarTema(b.dataset.tema);document.querySelectorAll("[data-tema]").forEach(x=>x.setAttribute("aria-pressed",x===b))});

@@ -292,12 +292,8 @@ def test_full_flow_through_local_api(env):
     assert api.get(f"/api/libros/{job['id']}/descargar/traducido").status_code == 200
     assert api.get(f"/api/libros/{job['id']}/descargar/bilingue").status_code == 200
     assert api.get(f"/api/libros/{job['id']}/informe.csv").status_code == 200
-    frases = api.post(f"/api/libros/{job['id']}/resumen", json={"metodo": "frases", "nivel": "breve"}).json()
-    assert frases["frases"]
-    claude = api.post(f"/api/libros/{job['id']}/resumen", json={"metodo": "claude", "nivel": "breve"}).json()
-    assert "Ideas" in claude["markdown"]
-    answer = api.post(f"/api/libros/{job['id']}/preguntar", json={"pregunta": "¿Qué dice Rousseau sobre voluntad?", "metodo": "claude"}).json()
-    assert answer["pasajes"] and answer["respuesta"]
+    answer = api.post(f"/api/libros/{job['id']}/preguntar", json={"pregunta": "¿Qué dice Rousseau sobre voluntad?"}).json()
+    assert answer["pasajes"] and not answer["respuesta"]
     assert api.delete(f"/api/libros/{job['id']}").status_code == 200
 
 
@@ -564,3 +560,104 @@ def test_export_viewer_text_and_storage(env):
     assert api.get(f"/api/libros/{job['id']}/exportar/doc").status_code == 404
     assert len(api.get(f"/api/libros/{job['id']}/texto/traducido/1").json()["texto"]) > 20
     assert api.get("/api/almacenamiento").json()["libros"] > 0
+
+
+class StudyAI(BaseHTTPRequestHandler):
+    calls = []
+    rate_limited = False
+
+    def log_message(self, *args):
+        pass
+
+    def do_POST(self):
+        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        prompt = body["messages"][0]["content"]
+        StudyAI.calls.append(prompt)
+        if StudyAI.rate_limited:
+            StudyAI.rate_limited = False
+            self.send_response(429)
+            self.send_header("Retry-After", "0")
+            self.end_headers()
+            return
+        if "NOTAS:" in prompt:
+            reply = {"mega_resumen": "Resumen global.", "ideas_clave": ["Idea uno"], "temas": [{"titulo": "Tema global", "descripcion": "Dos frases.", "bloques": [0]}]}
+        elif "TEXTO:" in prompt:
+            place = re.search(r"\n\[([^\]]+)\]", prompt.split("TEXTO:")[1]).group(1)
+            reply = {
+                "tema": "Tema", "resumen": "Resumen del bloque.",
+                "puntos": [{"texto": "Punto real", "lugar": place}, {"texto": "Punto con lugar inventado", "lugar": "página 9999"}],
+                "conceptos": [{"termino": "Voluntad", "definicion": "Definición", "lugar": place}],
+                "cronologia": [], "personas": [],
+                "test": [
+                    {"pregunta": "Buena", "opciones": ["a", "b", "c", "d"], "correcta": 1, "explicacion": "x", "lugar": place},
+                    {"pregunta": "Rota", "opciones": ["a", "b"], "correcta": 0},
+                    {"pregunta": "Fuera de rango", "opciones": ["a", "b", "c", "d"], "correcta": 7},
+                    {"pregunta": "Repetidas", "opciones": ["a", "a", "c", "d"], "correcta": 0},
+                ],
+                "desarrollo": [{"pregunta": "Explica", "respuesta": "Respuesta", "lugar": place}],
+                "tarjetas": [{"frente": "<img src=x onerror=alert(1)>", "dorso": "Dorso", "lugar": place}],
+            }
+        else:
+            reply = None
+        content = json.dumps(reply) if reply else "funciona"
+        data = json.dumps({"choices": [{"message": {"content": "```json\n" + content + "\n```" if reply else content}}]}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+
+def wait_study(api, job_id):
+    for _ in range(200):
+        state = api.get(f"/api/libros/{job_id}/estudio").json()
+        if state["trabajo"]["estado"] != "preparando":
+            return state
+        time.sleep(0.05)
+    raise AssertionError("El estudio no termina")
+
+
+def test_study_material_with_and_without_ai(env):
+    server = HTTPServer(("127.0.0.1", 0), StudyAI)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    api = client(env)
+    path = make_epub(env / "estudio.epub")
+    with path.open("rb") as handle:
+        job = api.post("/api/libros", files={"file": ("estudio.epub", handle)}).json()
+    assert api.post(f"/api/libros/{job['id']}/traducir", json={"motor": "prueba", "origen": "en", "destino": "es"}).status_code == 200
+    assert wait_done(api, job["id"])["estado"] == "terminado"
+
+    assert api.post("/api/ia/probar", json={}).json()["ok"] is False
+    assert api.post(f"/api/libros/{job['id']}/estudio", json={"metodo": "local"}).status_code == 200
+    local = wait_study(api, job["id"])
+    assert local["trabajo"]["estado"] == "listo" and local["material"]["temas"] and "aviso" in local["material"]
+
+    api.post("/api/ajustes", json={"ia_motor": "personalizada", "ia_personalizada_clave": "clave-secreta-larga", "ia_personalizada_url": f"http://127.0.0.1:{server.server_port}/v1", "ia_personalizada_modelo": "m"})
+    assert "clave-secreta-larga" not in api.get("/api/ajustes").text
+    assert api.post("/api/ia/probar", json={}).json()["ok"] is True
+
+    StudyAI.calls.clear()
+    StudyAI.rate_limited = True
+    assert api.post(f"/api/libros/{job['id']}/estudio", json={"metodo": "ia", "modo": "expres"}).status_code == 200
+    state = wait_study(api, job["id"])
+    assert state["trabajo"]["estado"] == "listo", state["trabajo"]
+    pack = state["material"]
+    assert pack["mega_resumen"] == "Resumen global." and pack["temas"][0]["titulo"] == "Tema global"
+    assert [q["pregunta"] for q in pack["test"]] == ["Buena"]
+    invented = [p for p in pack["puntos"] if p["texto"].startswith("Punto con")]
+    assert invented and invented[0]["lugar"] == ""
+    first_calls = len(StudyAI.calls)
+
+    assert api.post(f"/api/libros/{job['id']}/estudio", json={"metodo": "ia", "modo": "expres"}).status_code == 200
+    assert wait_study(api, job["id"])["trabajo"]["estado"] == "listo"
+    assert len(StudyAI.calls) == first_calls, "Lo ya hecho no debe volver a gastar cuota"
+
+    assert api.put(f"/api/libros/{job['id']}/estudio/progreso", json={"tarjetas": {"a": {"c": 2}}}).status_code == 200
+    assert api.get(f"/api/libros/{job['id']}/estudio").json()["progreso"]["tarjetas"]["a"]["c"] == 2
+    exported = api.get(f"/api/libros/{job['id']}/estudio/exportar/md")
+    assert exported.status_code == 200 and "Resumen global." in exported.text
+    anki = api.get(f"/api/libros/{job['id']}/estudio/exportar/anki")
+    assert "&lt;img" in anki.text and "<img" not in anki.text
+    answer = api.post(f"/api/libros/{job['id']}/preguntar", json={"pregunta": PARAGRAPHS[0][:80], "metodo": "ia"}).json()
+    assert answer["respuesta"] == "funciona"
+    server.shutdown()

@@ -22,7 +22,7 @@ from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import __version__, calidad, edicion, epub_tr, migrate, pdf_tr, store, tools, updates
+from . import __version__, calidad, edicion, epub_tr, estudio, migrate, pdf_tr, store, tools, updates
 from .engines import ENGINE_INFO, LANGUAGES, EngineError, build_engine
 from .pipeline import Cancelled, Translator, parse_glossary
 
@@ -42,6 +42,8 @@ app = FastAPI(title="Lumbre", docs_url=None, redoc_url=None, openapi_url=None)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 memory: store.Memory | None = None
 stop_flags: dict[str, threading.Event] = {}
+study_flags: dict[str, threading.Event] = {}
+study_jobs: dict[str, dict] = {}
 running_lock = threading.Lock()
 state_lock = threading.RLock()
 
@@ -137,7 +139,7 @@ def recover_jobs() -> None:
 
 
 def is_busy() -> bool:
-    return bool(stop_flags)
+    return bool(stop_flags or study_flags)
 
 
 def read_paragraphs(job_id: str) -> list[dict]:
@@ -754,24 +756,115 @@ def download(job_id: str, kind: str):
     return FileResponse(job_dir(job_id) / name, filename=f"{stem} ({label}){Path(name).suffix}")
 
 
-@app.post("/api/libros/{job_id}/resumen")
-def summarize(job_id: str, body: dict):
-    level = body.get("nivel", "media")
+def run_study(job_id: str, metodo: str, modo: str) -> None:
+    directory = job_dir(job_id)
+    state = study_jobs[job_id]
+    stop = study_flags[job_id]
+    try:
+        paragraphs = read_paragraphs(job_id)
+        if metodo == "ia":
+            provider = estudio.provider_config(store.load_config())
+            if not provider:
+                raise EngineError("auth", "Elige una IA en Ajustes.")
+
+            def progress(done: int, total: int) -> None:
+                state.update(hecho=done, total=total)
+
+            pack = estudio.generate_ai(paragraphs, provider, directory / "estudio_bloques", modo, progress, stop.is_set)
+        else:
+            pack = estudio.generate_local(paragraphs, edicion.load(directory) if (directory / "segmentos.json").exists() else None)
+        pack["fuente"] = "traducido" if (directory / "texto_traducido.json").exists() else "original"
+        if not any(pack["temas"]):
+            raise EngineError("bad", "El libro no tiene texto suficiente.")
+        temporary = directory / "estudio.json.tmp"
+        temporary.write_text(json.dumps(pack, ensure_ascii=False), encoding="utf-8")
+        temporary.replace(directory / "estudio.json")
+        state.update(estado="listo", mensaje="")
+    except EngineError as exc:
+        state.update(estado="detenido" if exc.kind == "stop" else "error", mensaje="" if exc.kind == "stop" else str(exc))
+    except Exception as exc:
+        traceback.print_exc()
+        state.update(estado="error", mensaje=f"No se pudo preparar el material: {exc}")
+    finally:
+        study_flags.pop(job_id, None)
+
+
+@app.get("/api/libros/{job_id}/estudio")
+def study_status(job_id: str):
+    directory = job_dir(job_id)
+    if job_id in study_flags:
+        return {"material": None, "progreso": {}, "trabajo": study_jobs[job_id], "ia": None, "estimacion": {}, "traducido": False}
+    path = directory / "estudio.json"
+    progress_path = directory / "estudio_progreso.json"
     paragraphs = read_paragraphs(job_id)
     config = store.load_config()
-    if body.get("metodo") == "claude":
-        if not config["claude_key"]:
-            raise HTTPException(400, "Falta la clave de la API de Claude. Añádela en Ajustes.")
-        try:
-            text = tools.claude_summary(paragraphs, level, config["claude_key"], config["claude_summary_model"])
-        except EngineError as exc:
-            raise HTTPException(400, str(exc))
-        result = {"metodo": "claude", "markdown": text}
+    provider = estudio.provider_config(config)
+    return {
+        "material": json.loads(path.read_text(encoding="utf-8")) if path.exists() else None,
+        "progreso": json.loads(progress_path.read_text(encoding="utf-8")) if progress_path.exists() else {},
+        "trabajo": study_jobs.get(job_id) or {"estado": "parado"},
+        "ia": {"id": provider["id"], "nombre": provider["nombre"], "modelo": provider["modelo"]} if provider else None,
+        "estimacion": {modo: estudio.estimate(paragraphs, modo) for modo in ("expres", "completo")},
+        "traducido": (directory / "texto_traducido.json").exists(),
+    }
+
+
+@app.post("/api/libros/{job_id}/estudio")
+def study_start(job_id: str, body: dict):
+    job_dir(job_id)
+    if job_id in study_flags:
+        raise HTTPException(409, "Ya se está preparando el material de este libro.")
+    metodo = "ia" if body.get("metodo") == "ia" else "local"
+    modo = "completo" if body.get("modo") == "completo" else "expres"
+    study_flags[job_id] = threading.Event()
+    study_jobs[job_id] = {"estado": "preparando", "metodo": metodo, "hecho": 0, "total": 0, "mensaje": ""}
+    threading.Thread(target=run_study, args=(job_id, metodo, modo), daemon=True).start()
+    return study_jobs[job_id]
+
+
+@app.post("/api/libros/{job_id}/estudio/detener")
+def study_stop(job_id: str):
+    flag = study_flags.get(job_id)
+    if flag:
+        flag.set()
+    return {"ok": True}
+
+
+@app.put("/api/libros/{job_id}/estudio/progreso")
+def study_progress(job_id: str, body: dict):
+    payload = json.dumps(body, ensure_ascii=False)
+    if len(payload) > 2_000_000:
+        raise HTTPException(413, "Progreso demasiado grande.")
+    (job_dir(job_id) / "estudio_progreso.json").write_text(payload, encoding="utf-8")
+    return {"ok": True}
+
+
+@app.get("/api/libros/{job_id}/estudio/exportar/{formato}")
+def study_export(job_id: str, formato: str):
+    path = job_dir(job_id) / "estudio.json"
+    if not path.exists():
+        raise HTTPException(404, "Todavía no hay material de estudio.")
+    pack = json.loads(path.read_text(encoding="utf-8"))
+    title = read_job(job_id).get("titulo") or "Libro"
+    safe = re.sub(r'[^\w -]', "", title)[:60].strip() or "Libro"
+    if formato == "anki":
+        content, media, name = estudio.export_anki(pack), "text/plain; charset=utf-8", f"{safe} - tarjetas Anki.txt"
+    elif formato == "md":
+        content, media, name = estudio.export_markdown(pack, title), "text/markdown; charset=utf-8", f"{safe} - estudio.md"
     else:
-        count = tools.LEVELS.get(level, tools.LEVELS["media"])[1]
-        result = {"metodo": "frases", "frases": tools.extractive_summary(paragraphs, count)}
-    (job_dir(job_id) / f"resumen_{level}.json").write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
-    return result
+        raise HTTPException(404, "Formato desconocido.")
+    return Response(content, media_type=media, headers={"Content-Disposition": f"attachment; filename*=UTF-8''{quote(name)}"})
+
+
+@app.post("/api/ia/probar")
+def test_ai():
+    provider = estudio.provider_config(store.load_config())
+    if not provider:
+        return {"ok": False, "mensaje": "Elige primero una IA."}
+    try:
+        return {"ok": True, "muestra": estudio.chat(provider, "Responde solo con la palabra: funciona", as_json=False, max_tokens=200).strip()[:80]}
+    except EngineError as exc:
+        return {"ok": False, "mensaje": str(exc)}
 
 
 @app.post("/api/libros/{job_id}/preguntar")
@@ -780,13 +873,12 @@ def ask(job_id: str, body: dict):
     if not question:
         raise HTTPException(400, "Escribe una pregunta.")
     passages = tools.retrieve(read_paragraphs(job_id), question)
-    config = store.load_config()
     if not passages:
         return {"respuesta": "", "pasajes": []}
-    if body.get("metodo") == "claude" and config["claude_key"]:
+    provider = estudio.provider_config(store.load_config())
+    if body.get("metodo") == "ia" and provider:
         try:
-            answer = tools.claude_answer(question, passages, config["claude_key"], config["claude_summary_model"])
+            return {"respuesta": estudio.answer_question(question, passages, provider), "pasajes": passages}
         except EngineError as exc:
             raise HTTPException(400, str(exc))
-        return {"respuesta": answer, "pasajes": passages}
     return {"respuesta": "", "pasajes": passages}
